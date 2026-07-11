@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-11T22:15:49.261Z",
-  "count": 4,
+  "generatedAt": "2026-07-11T22:27:14.582Z",
+  "count": 5,
   "apps": [
     {
       "id": "vibeops.example.calculator",
@@ -32,6 +32,23 @@
         "readFile",
         "writeFile",
         "listFiles"
+      ]
+    },
+    {
+      "id": "vibeops.flappy-bird",
+      "name": "Flappy Bird",
+      "version": "1.0.0",
+      "author": "vibeops",
+      "category": "Games",
+      "description": "Der klassische Endlos-Arcade-Hit: Fliege so weit wie möglich durch die Rohre!",
+      "icon": "🐦",
+      "entry": "index.html",
+      "path": "Games/vibeops.flappy-bird",
+      "minVibeAgentGo": "2607.9.4",
+      "license": "MIT",
+      "permissions": [
+        "readFile",
+        "writeFile"
       ]
     },
     {
