@@ -1,0 +1,17 @@
+{
+  "name": "vag-apps",
+  "version": "1.0.0",
+  "description": "App Store for vibeAgentGo — submissions, validation, and release tooling.",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate.js",
+    "build:index": "node scripts/build-index.js",
+    "release:check": "node scripts/release-check.js",
+    "lint": "npm run validate && npm run build:index"
+  },
+  "keywords": ["vibeAgentGo", "app-store", "vAG"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .calc {
+      width: 100%;
+      max-width: 280px;
+      display: grid;
+      gap: 0.5rem;
+    }
+    .display {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      text-align: right;
+      font-size: 1.5rem;
+      min-height: 3rem;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+    button {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 0.5rem;
+      color: inherit;
+      padding: 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #30363d; }
+    button.op { background: #1f4b7a; }
+    button.eq { background: #1a7f37; }
+  </style>
+</head>
+<body>
+  <div class="calc">
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <button onclick="clr()">C</button>
+      <button onclick="back()">⌫</button>
+      <button onclick="op('/')" class="op">÷</button>
+      <button onclick="op('*')" class="op">×</button>
+      <button onclick="digit('7')">7</button>
+      <button onclick="digit('8')">8</button>
+      <button onclick="digit('9')">9</button>
+      <button onclick="op('-')" class="op">−</button>
+      <button onclick="digit('4')">4</button>
+      <button onclick="digit('5')">5</button>
+      <button onclick="digit('6')">6</button>
+      <button onclick="op('+')" class="op">+</button>
+      <button onclick="digit('1')">1</button>
+      <button onclick="digit('2')">2</button>
+      <button onclick="digit('3')">3</button>
+      <button onclick="calc()" class="eq" rowspan="2">=</button>
+      <button onclick="digit('0')" style="grid-column: span 2;">0</button>
+      <button onclick="digit('.')">.</button>
+    </div>
+  </div>
+  <script>
+    let expr = '';
+    const display = document.getElementById('display');
+    function update() { display.textContent = expr || '0'; }
+    function digit(d) { expr += d; update(); }
+    function op(o) { if (expr) expr += o; update(); }
+    function clr() { expr = ''; update(); }
+    function back() { expr = expr.slice(0, -1); update(); }
+    function calc() {
+      try { expr = String(eval(expr) || 0); }
+      catch { expr = 'Error'; }
+      update();
+    }
+  </script>
+</body>
+</html>

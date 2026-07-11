@@ -1,0 +1,13 @@
+{
+  "id": "deinname.appname",
+  "name": "AppName",
+  "version": "1.0.0",
+  "author": "Dein Name",
+  "category": "Productivity",
+  "description": "Kurze Beschreibung der App.",
+  "icon": "assets/icon.svg",
+  "entry": "index.html",
+  "permissions": [],
+  "minVibeAgentGo": "2607.9.0",
+  "license": "MIT"
+}
