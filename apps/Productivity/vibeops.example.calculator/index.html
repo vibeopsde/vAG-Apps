@@ -2,16 +2,16 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Calculator</title>
   <script type="application/vnd.vag+json">
   {
     "id": "vibeops.example.calculator",
     "name": "Calculator",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "author": "vibeops",
     "category": "Productivity",
-    "description": "Eine einfache Taschenrechner-App für vibeAgentGo.",
+    "description": "Ein einfacher Taschenrechner für vibeAgentGo, der das gesamte Fenster nutzt.",
     "icon": "🧮",
     "permissions": [],
     "minVibeAgentGo": "2607.9.4",
@@ -20,50 +20,68 @@
   </script>
   <style>
     * { box-sizing: border-box; }
-    body {
+    html, body {
       margin: 0;
-      padding: 1rem;
-      font-family: system-ui, sans-serif;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #0d1117;
       color: #e6edf3;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
     }
     .calc {
       width: 100%;
-      max-width: 280px;
-      display: grid;
-      gap: 0.5rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     .display {
+      flex: 0 0 30%;
+      min-height: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 1rem 1.5rem;
       background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 0.5rem;
-      padding: 0.75rem;
-      text-align: right;
-      font-size: 1.5rem;
-      min-height: 3rem;
+      border-bottom: 1px solid #30363d;
+      font-size: clamp(2rem, 8vh, 5rem);
+      font-weight: 300;
+      word-break: break-all;
+      line-height: 1.1;
     }
     .buttons {
+      flex: 1 1 70%;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 0.5rem;
+      grid-template-rows: repeat(5, 1fr);
+      gap: 1px;
+      background: #30363d;
+      min-height: 0;
     }
     button {
+      border: none;
       background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 0.5rem;
       color: inherit;
-      padding: 0.75rem;
-      font-size: 1rem;
+      font-size: clamp(1.2rem, 4vh, 2.5rem);
+      font-weight: 500;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      transition: background 0.08s ease;
     }
-    button:hover { background: #30363d; }
+    button:active { background: #30363d; }
     button.op { background: #1f4b7a; }
+    button.op:active { background: #2d6da8; }
     button.eq { background: #1a7f37; }
+    button.eq:active { background: #26a044; }
+    button.zero { grid-column: span 2; }
+    button.tall { grid-row: span 2; }
   </style>
 </head>
 <body>
@@ -85,8 +103,8 @@
       <button onclick="digit('1')">1</button>
       <button onclick="digit('2')">2</button>
       <button onclick="digit('3')">3</button>
-      <button onclick="calc()" class="eq" rowspan="2">=</button>
-      <button onclick="digit('0')" style="grid-column: span 2;">0</button>
+      <button onclick="calc()" class="eq tall">=</button>
+      <button onclick="digit('0')" class="zero">0</button>
       <button onclick="digit('.')">.</button>
     </div>
   </div>
@@ -103,6 +121,14 @@
       catch { expr = 'Error'; }
       update();
     }
+    document.addEventListener('keydown', e => {
+      const key = e.key;
+      if (/[0-9.]/.test(key)) { e.preventDefault(); digit(key); }
+      else if (['+','-','*','/'].includes(key)) { e.preventDefault(); op(key); }
+      else if (key === 'Enter' || key === '=') { e.preventDefault(); calc(); }
+      else if (key === 'Backspace') { e.preventDefault(); back(); }
+      else if (key === 'Escape') { e.preventDefault(); clr(); }
+    });
   </script>
 </body>
 </html>

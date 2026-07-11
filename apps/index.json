@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-07-11T21:41:44.971Z",
+  "generatedAt": "2026-07-11T21:48:13.458Z",
   "count": 2,
   "apps": [
     {
       "id": "vibeops.example.calculator",
       "name": "Calculator",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "vibeops",
       "category": "Productivity",
-      "description": "Eine einfache Taschenrechner-App für vibeAgentGo.",
+      "description": "Ein einfacher Taschenrechner für vibeAgentGo, der das gesamte Fenster nutzt.",
       "icon": "🧮",
       "entry": "index.html",
       "path": "Productivity/vibeops.example.calculator",
