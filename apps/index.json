@@ -1,7 +1,25 @@
 {
-  "generatedAt": "2026-07-11T22:27:14.582Z",
-  "count": 5,
+  "generatedAt": "2026-07-11T22:33:37.063Z",
+  "count": 6,
   "apps": [
+    {
+      "id": "vibeops.games.2048",
+      "name": "2048",
+      "version": "1.0.0",
+      "author": "vibeops",
+      "category": "Games",
+      "description": "Das klassische 2048-Puzzle – Kacheln zusammenführen und die 2048 erreichen!",
+      "icon": "🎮",
+      "entry": "index.html",
+      "path": "Games/vibeops.games.2048",
+      "minVibeAgentGo": "2607.9.4",
+      "license": "MIT",
+      "permissions": [
+        "readFile",
+        "writeFile",
+        "listFiles"
+      ]
+    },
     {
       "id": "vibeops.example.calculator",
       "name": "Calculator",

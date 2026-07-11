@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>2048</title>
+<!--
+  MIT License
+
+  Copyright (c) 2026 Lars Greipl - vibeops.de
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+  NOTICE: This application was generated with assistance from AI models
+  (e.g. Kimi 2.7 Code, GLM 5.2). All AI-generated outputs were reviewed,
+  adapted, and released under the above license by Lars Greipl - vibeops.de.
+-->
+<script type="application/vnd.vag+json">
+{
+  "id": "vibeops.games.2048",
+  "name": "2048",
+  "version": "1.0.0",
+  "author": "vibeops",
+  "category": "Games",
+  "description": "Das klassische 2048-Puzzle – Kacheln zusammenführen und die 2048 erreichen!",
+  "icon": "🎮",
+  "permissions": ["readFile", "writeFile", "listFiles"],
+  "minVibeAgentGo": "2607.9.4",
+  "license": "MIT"
+}
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+html, body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #faf8ef;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.header {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px 8px;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 48px;
+  font-weight: 800;
+  color: #776e65;
+  letter-spacing: -1px;
+}
+
+.scores {
+  display: flex;
+  gap: 8px;
+}
+
+.score-box {
+  background: #bbada0;
+  border-radius: 6px;
+  padding: 6px 16px;
+  text-align: center;
+  min-width: 70px;
+}
+.score-box .label { font-size: 11px; color: #eee4da; text-transform: uppercase; font-weight: 700; }
+.score-box .value { font-size: 22px; color: #fff; font-weight: 800; }
+
+.toolbar {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 20px 12px;
+  flex-shrink: 0;
+}
+.toolbar .info { font-size: 13px; color: #776e65; font-weight: 600; }
+.btn {
+  background: #8f7a66;
+  color: #f9f6f2;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn:hover { background: #9f8b77; }
+.btn:active { background: #7c6856; }
+
+.board-wrap {
+  position: relative;
+  background: #bbada0;
+  border-radius: 8px;
+  padding: 10px;
+  width: calc(100vw - 40px);
+  max-width: 460px;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  margin: 0 auto;
+  outline: none;
+}
+
+.grid-bg {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+}
+
+.cell-bg {
+  background: rgba(238,228,218,0.35);
+  border-radius: 6px;
+}
+
+.tiles {
+  position: absolute;
+  inset: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.tile-slot {
+  position: relative;
+}
+
+.tile {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-weight: 800;
+  transition: transform .12s ease, opacity .12s ease;
+}
+.tile.new { animation: pop .18s ease; }
+.tile.merged { animation: merge .18s ease; z-index: 2; }
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+@keyframes merge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); z-index: 2; }
+  100% { transform: scale(1); }
+}
+
+.t2    { background: #eee4da; color: #776e65; }
+.t4    { background: #ede0c8; color: #776e65; }
+.t8    { background: #f2b179; color: #f9f6f2; }
+.t16   { background: #f59563; color: #f9f6f2; }
+.t32   { background: #f67c5f; color: #f9f6f2; }
+.t64   { background: #f65e3b; color: #f9f6f2; }
+.t128  { background: #edcf72; color: #f9f6f2; box-shadow: 0 0 12px rgba(243,215,116,.6); }
+.t256  { background: #edcc61; color: #f9f6f2; box-shadow: 0 0 14px rgba(243,215,116,.7); }
+.t512  { background: #edc850; color: #f9f6f2; box-shadow: 0 0 16px rgba(243,215,116,.8); }
+.t1024 { background: #edc53f; color: #f9f6f2; box-shadow: 0 0 18px rgba(243,215,116,.9); }
+.t2048 { background: #edc22e; color: #f9f6f2; box-shadow: 0 0 20px rgba(243,215,116,1); }
+.t-super { background: #3c3a32; color: #f9f6f2; }
+
+.tile { font-size: 32px; }
+.tile.t128, .tile.t256, .tile.t512 { font-size: 28px; }
+.tile.t1024, .tile.t2048 { font-size: 24px; }
+.tile.t-super { font-size: 22px; }
+
+@media (max-width: 420px) {
+  .title { font-size: 38px; }
+  .tile { font-size: 26px; }
+  .tile.t128, .tile.t256, .tile.t512 { font-size: 22px; }
+  .tile.t1024, .tile.t2048 { font-size: 18px; }
+  .tile.t-super { font-size: 16px; }
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(238,228,218,0.73);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.overlay.show { opacity: 1; pointer-events: auto; }
+.overlay .msg { font-size: 42px; font-weight: 800; color: #776e65; }
+.overlay .sub { font-size: 16px; color: #776e65; font-weight: 600; }
+
+.hint {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #a99f90;
+  text-align: center;
+  padding: 0 20px 20px;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">2048</div>
+  <div class="scores">
+    <div class="score-box"><div class="label">Punkte</div><div class="value" id="score">0</div></div>
+    <div class="score-box"><div class="label">Bestes</div><div class="value" id="best">0</div></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="info" id="info">Verbinde gleiche Kacheln!</div>
+  <button class="btn" id="newGame">Neu</button>
+</div>
+
+<div class="board-wrap" id="boardWrap" tabindex="0">
+  <div class="grid-bg" id="gridBg"></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="overlay" id="overlay">
+    <div class="msg" id="overlayMsg">Game Over!</div>
+    <div class="sub" id="overlaySub"></div>
+    <button class="btn" id="overlayBtn">Nochmal</button>
+  </div>
+</div>
+
+<div class="hint" id="hint">Pfeiltasten oder Wischen zum Spielen. Klicke aufs Spielfeld für Tastatur-Steuerung.</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var SIZE = 4;
+  var board = [];
+  var score = 0;
+  var best = 0;
+  var won = false;
+  var gameOver = false;
+  var SCORE_FILE = 'apps/Games/vibeops.games.2048/2048-highscore.json';
+
+  var gridBg = document.getElementById('gridBg');
+  var tilesEl = document.getElementById('tiles');
+  var scoreEl = document.getElementById('score');
+  var bestEl = document.getElementById('best');
+  var overlay = document.getElementById('overlay');
+  var overlayMsg = document.getElementById('overlayMsg');
+  var overlaySub = document.getElementById('overlaySub');
+  var overlayBtn = document.getElementById('overlayBtn');
+  var newGameBtn = document.getElementById('newGame');
+  var boardWrap = document.getElementById('boardWrap');
+
+  for (var i = 0; i < 16; i++) {
+    var cell = document.createElement('div');
+    cell.className = 'cell-bg';
+    gridBg.appendChild(cell);
+  }
+
+  for (var j = 0; j < 16; j++) {
+    var slot = document.createElement('div');
+    slot.className = 'tile-slot';
+    slot.dataset.idx = j;
+    tilesEl.appendChild(slot);
+  }
+
+  function extractContent(raw) {
+    if (!raw) return null;
+    if (typeof raw === 'string') return raw;
+    if (typeof raw === 'object' && raw.data !== undefined) return raw.data;
+    return null;
+  }
+
+  function loadBest() {
+    if (window.vibeAgentGo && window.vibeAgentGo.readFile) {
+      window.vibeAgentGo.readFile(SCORE_FILE).then(function(res) {
+        try {
+          var content = extractContent(res);
+          if (!content || typeof content !== 'string') return;
+          var data = JSON.parse(content);
+          best = data.best || 0;
+          bestEl.textContent = best;
+        } catch(e) {}
+      }).catch(function(){});
+    }
+  }
+
+  function saveBest() {
+    if (window.vibeAgentGo && window.vibeAgentGo.writeFile) {
+      window.vibeAgentGo.writeFile(SCORE_FILE, JSON.stringify({ best: best }));
+    }
+  }
+
+  function newGame() {
+    board = [];
+    for (var r = 0; r < SIZE; r++) {
+      board.push([0,0,0,0]);
+    }
+    score = 0;
+    won = false;
+    gameOver = false;
+    overlay.classList.remove('show');
+    addRandomTile();
+    addRandomTile();
+    render();
+    boardWrap.focus();
+  }
+
+  function addRandomTile() {
+    var empty = [];
+    for (var r = 0; r < SIZE; r++) {
+      for (var c = 0; c < SIZE; c++) {
+        if (board[r][c] === 0) empty.push([r, c]);
+      }
+    }
+    if (empty.length === 0) return;
+    var idx = Math.floor(Math.random() * empty.length);
+    var r = empty[idx][0], c = empty[idx][1];
+    board[r][c] = Math.random() < 0.9 ? 2 : 4;
+  }
+
+  function clone(b) {
+    return b.map(function(row) { return row.slice(); });
+  }
+
+  function slideLeft(row) {
+    var arr = row.filter(function(v) { return v !== 0; });
+    var result = [];
+    var merged = [];
+    var gain = 0;
+    var i = 0;
+    while (i < arr.length) {
+      if (i + 1 < arr.length && arr[i] === arr[i + 1]) {
+        var val = arr[i] * 2;
+        result.push(val);
+        merged.push(result.length - 1);
+        gain += val;
+        if (val === 2048 && !won) won = true;
+        i += 2;
+      } else {
+        result.push(arr[i]);
+        i++;
+      }
+    }
+    while (result.length < SIZE) result.push(0);
+    return { row: result, merged: merged, gain: gain };
+  }
+
+  function transpose(b) {
+    var n = [];
+    for (var r = 0; r < SIZE; r++) {
+      var row = [];
+      for (var c = 0; c < SIZE; c++) row.push(b[c][r]);
+      n.push(row);
+    }
+    return n;
+  }
+
+  function reverseRows(b) {
+    return b.map(function(row) { return row.slice().reverse(); });
+  }
+
+  function move(dir) {
+    if (gameOver) return;
+    var oldBoard = clone(board);
+    var gain = 0;
+    var mergedPositions = {};
+
+    if (dir === 'left') {
+      for (var r = 0; r < SIZE; r++) {
+        var res = slideLeft(board[r]);
+        board[r] = res.row;
+        gain += res.gain;
+        res.merged.forEach(function(c) { mergedPositions[r + ',' + c] = true; });
+      }
+    } else if (dir === 'right') {
+      board = reverseRows(board);
+      for (var r2 = 0; r2 < SIZE; r2++) {
+        var res2 = slideLeft(board[r2]);
+        board[r2] = res2.row;
+        gain += res2.gain;
+        res2.merged.forEach(function(c) { mergedPositions[r2 + ',' + (SIZE-1-c)] = true; });
+      }
+      board = reverseRows(board);
+    } else if (dir === 'up') {
+      board = transpose(board);
+      for (var r3 = 0; r3 < SIZE; r3++) {
+        var res3 = slideLeft(board[r3]);
+        board[r3] = res3.row;
+        gain += res3.gain;
+        res3.merged.forEach(function(c) { mergedPositions[c + ',' + r3] = true; });
+      }
+      board = transpose(board);
+    } else if (dir === 'down') {
+      board = transpose(board);
+      board = reverseRows(board);
+      for (var r4 = 0; r4 < SIZE; r4++) {
+        var res4 = slideLeft(board[r4]);
+        board[r4] = res4.row;
+        gain += res4.gain;
+        res4.merged.forEach(function(c) { mergedPositions[(SIZE-1-c) + ',' + r4] = true; });
+      }
+      board = reverseRows(board);
+      board = transpose(board);
+    }
+
+    score += gain;
+    if (score > best) {
+      best = score;
+      saveBest();
+    }
+
+    var changed = JSON.stringify(oldBoard) !== JSON.stringify(board);
+    if (changed) {
+      addRandomTile();
+      render(mergedPositions);
+      checkGameOver();
+      if (won && !overlay.classList.contains('show')) {
+        showOverlay('2048! 🎉', 'Du hast die 2048 erreicht! Weiter spielen?', 'Weiter');
+      }
+    }
+  }
+
+  function checkGameOver() {
+    for (var r = 0; r < SIZE; r++) {
+      for (var c = 0; c < SIZE; c++) {
+        if (board[r][c] === 0) return;
+        if (c < SIZE - 1 && board[r][c] === board[r][c+1]) return;
+        if (r < SIZE - 1 && board[r][c] === board[r+1][c]) return;
+      }
+    }
+    gameOver = true;
+    showOverlay('Game Over!', 'Endpunktzahl: ' + score, 'Nochmal');
+  }
+
+  function showOverlay(msg, sub, btnText) {
+    overlayMsg.textContent = msg;
+    overlaySub.textContent = sub;
+    overlayBtn.textContent = btnText;
+    overlay.classList.add('show');
+  }
+
+  function tileClass(val) {
+    if (val <= 2048) return 't' + val;
+    return 't-super';
+  }
+
+  function render(mergedPositions) {
+    scoreEl.textContent = score;
+    bestEl.textContent = best;
+
+    var slots = tilesEl.querySelectorAll('.tile-slot');
+    slots.forEach(function(s) { s.innerHTML = ''; });
+
+    for (var r = 0; r < SIZE; r++) {
+      for (var c = 0; c < SIZE; c++) {
+        var val = board[r][c];
+        if (val === 0) continue;
+        var idx = r * SIZE + c;
+        var slot = slots[idx];
+        var tile = document.createElement('div');
+        tile.className = 'tile ' + tileClass(val);
+        if (mergedPositions && mergedPositions[r + ',' + c]) {
+          tile.classList.add('merged');
+        } else {
+          tile.classList.add('new');
+        }
+        tile.textContent = val;
+        slot.appendChild(tile);
+      }
+    }
+  }
+
+  boardWrap.addEventListener('keydown', function(e) {
+    var map = {
+      'ArrowLeft': 'left', 'ArrowRight': 'right',
+      'ArrowUp': 'up', 'ArrowDown': 'down',
+      'a': 'left', 'd': 'right', 'w': 'up', 's': 'down'
+    };
+    var dir = map[e.key];
+    if (dir) {
+      e.preventDefault();
+      move(dir);
+    }
+  });
+
+  var touchStartX = 0, touchStartY = 0;
+  boardWrap.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  boardWrap.addEventListener('touchend', function(e) {
+    if (e.changedTouches.length === 0) return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    var absX = Math.abs(dx), absY = Math.abs(dy);
+    var threshold = 20;
+    if (Math.max(absX, absY) < threshold) return;
+    if (absX > absY) {
+      move(dx > 0 ? 'right' : 'left');
+    } else {
+      move(dy > 0 ? 'down' : 'up');
+    }
+  }, { passive: true });
+
+  newGameBtn.addEventListener('click', function(e) { e.stopPropagation(); newGame(); });
+  overlayBtn.addEventListener('click', function(e) { e.stopPropagation(); newGame(); });
+  boardWrap.addEventListener('click', function() { boardWrap.focus(); });
+
+  loadBest();
+  newGame();
+  boardWrap.focus();
+})();
+</script>
+</body>
+</html>
