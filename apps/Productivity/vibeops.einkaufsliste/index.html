@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Einkaufsliste</title>
+<!--
+  MIT License
+
+  Copyright (c) 2026 Lars Greipl - vibeops.de
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+  NOTICE: This application was generated with assistance from AI models
+  (e.g. Kimi 2.7 Code, GLM 5.2). All AI-generated outputs were reviewed,
+  adapted, and released under the above license by Lars Greipl - vibeops.de.
+-->
+<script type="application/vnd.vag+json">
+{
+  "id": "vibeops.einkaufsliste",
+  "name": "Einkaufsliste",
+  "version": "1.1.0",
+  "author": "vibeops",
+  "category": "Productivity",
+  "description": "Einfache Einkaufsliste mit Workspace-Persistenz. Agent und App greifen auf dieselbe JSON-Datei zu.",
+  "icon": "🛒",
+  "permissions": ["readFile", "writeFile", "listFiles"],
+  "minVibeAgentGo": "2607.9.4",
+  "license": "MIT"
+}
+</script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222634;
+    --accent: #4c8dff;
+    --accent2: #34c759;
+    --danger: #ff453a;
+    --text: #e4e6eb;
+    --textdim: #8e8e93;
+    --border: #2a2e3a;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100%;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none; -webkit-user-select: none;
+  }
+  #app {
+    height: 100%;
+    display: flex; flex-direction: column;
+  }
+  .header {
+    flex-shrink: 0;
+    background: var(--surface);
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; }
+  .header .count { font-size: 13px; color: var(--textdim); }
+  .input-row {
+    flex-shrink: 0;
+    display: flex; gap: 8px; padding: 12px 16px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  .input-row input {
+    flex: 1; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); font-size: 16px; outline: none;
+  }
+  .input-row input:focus { border-color: var(--accent); }
+  .input-row button {
+    padding: 12px 18px; border-radius: 10px; border: none;
+    background: var(--accent); color: #fff; font-size: 16px;
+    font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .input-row button:active { opacity: 0.8; }
+
+  .filter-row {
+    flex-shrink: 0;
+    display: flex; gap: 8px; padding: 10px 16px;
+    background: var(--surface);
+  }
+  .filter-btn {
+    padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--textdim); font-size: 13px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .scroll {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .list { padding: 8px 16px; }
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px; margin-bottom: 6px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.15s;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+  .item:active { background: var(--surface2); }
+  .checkbox {
+    width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--textdim);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .item.done .checkbox { background: var(--accent2); border-color: var(--accent2); }
+  .item.done .checkbox::after { content: '✓'; color: #fff; font-size: 16px; font-weight: bold; }
+  .item-text { flex: 1; font-size: 16px; line-height: 1.3; }
+  .item.done .item-text { text-decoration: line-through; color: var(--textdim); }
+  .delete-btn {
+    width: 32px; height: 32px; border-radius: 8px; border: none;
+    background: transparent; color: var(--textdim); font-size: 20px;
+    cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+  }
+  .delete-btn:active { background: var(--danger); color: #fff; }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--textdim); }
+  .empty .big { font-size: 48px; margin-bottom: 12px; }
+  .empty p { font-size: 15px; }
+
+  .footer { flex-shrink: 0; text-align: center; padding: 12px 16px; color: var(--textdim); font-size: 12px; border-top: 1px solid var(--border); background: var(--surface); }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="header">
+    <h1>🛒 Einkaufsliste</h1>
+    <span class="count" id="counter">—</span>
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="newItem" placeholder="Artikel hinzufügen…" autocomplete="off">
+    <button id="addBtn">＋</button>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" data-filter="all">Alle</button>
+    <button class="filter-btn" data-filter="open">Offen</button>
+    <button class="filter-btn" data-filter="done">Erledigt</button>
+  </div>
+
+  <div class="scroll">
+    <div class="list" id="list"></div>
+  </div>
+
+  <div class="footer">
+    Daten werden im Workspace gespeichert — Agent &amp; App greifen auf dieselbe JSON-Datei zu.
+  </div>
+</div>
+
+<script>
+(function() {
+  var APP_DIR = 'apps/Productivity/vibeops.einkaufsliste';
+  var DB_FILE = APP_DIR + '/einkaufsliste.json';
+  var state = { items: [], nextId: 1 };
+  var filter = 'all';
+
+  var listEl = document.getElementById('list');
+  var inputEl = document.getElementById('newItem');
+  var addBtn = document.getElementById('addBtn');
+  var counterEl = document.getElementById('counter');
+
+  var loaded = false;
+  var loadFailed = false;
+  var pendingSave = false;
+
+  async function waitForBridge(maxWait) {
+    maxWait = maxWait || 5000;
+    var waited = 0;
+    while (!window.vibeAgentGo && waited < maxWait) {
+      await new Promise(function(r) { setTimeout(r, 100); });
+      waited += 100;
+    }
+    return !!window.vibeAgentGo;
+  }
+
+  function extractContent(raw) {
+    if (!raw) return null;
+    if (typeof raw === 'string') return raw;
+    if (typeof raw === 'object' && raw.data !== undefined) return raw.data;
+    if (typeof raw === 'object' && raw.items) return JSON.stringify(raw);
+    return null;
+  }
+
+  async function load() {
+    loaded = false;
+    loadFailed = false;
+
+    var bridgeReady = await waitForBridge(8000);
+    if (!bridgeReady) {
+      console.error('Bridge API nicht verfügbar nach 8s');
+      loadFailed = true;
+      listEl.innerHTML = '\u003cdiv class="empty"\u003e\u003cdiv class="big"\u003e⚠️\u003c/div\u003e\u003cp\u003eBridge API nicht verfügbar. Bitte App neu öffnen.\u003c/p\u003e\u003c/div\u003e';
+      return;
+    }
+
+    for (var attempt = 0; attempt < 5; attempt++) {
+      try {
+        var raw = await window.vibeAgentGo.readFile(DB_FILE);
+        var content = extractContent(raw);
+        if (content && typeof content === 'string' && content.length > 0) {
+          var parsed = JSON.parse(content);
+          if (parsed && Array.isArray(parsed.items)) {
+            state = parsed;
+            if (!state.nextId) state.nextId = Math.max(0, ...state.items.map(function(i) { return i.id; })) + 1;
+          }
+        }
+        loaded = true;
+        console.log('Load erfolgreich —', state.items.length, 'Einträge');
+        break;
+      } catch(e) {
+        console.warn('load attempt ' + (attempt + 1) + ' failed:', e);
+        await new Promise(function(r) { setTimeout(r, 300 * (attempt + 1)); });
+      }
+    }
+    if (!loaded) {
+      loadFailed = true;
+      console.error('load endgültig gescheitert — save wird blockiert');
+      listEl.innerHTML = '\u003cdiv class="empty"\u003e\u003cdiv class="big"\u003e⚠️\u003c/div\u003e\u003cp\u003eDaten konnten nicht geladen werden.\u003c/p\u003e\u003c/div\u003e';
+      return;
+    }
+    render();
+    if (pendingSave && loaded) {
+      pendingSave = false;
+      doSave();
+    }
+  }
+
+  async function doSave() {
+    try {
+      await window.vibeAgentGo.writeFile(DB_FILE, JSON.stringify(state, null, 2));
+    } catch(e) {
+      console.error('Save failed:', e);
+    }
+  }
+
+  var saveTimer = null;
+  function save() {
+    if (!loaded || loadFailed) {
+      pendingSave = true;
+      return;
+    }
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(doSave, 200);
+  }
+
+  function addItem(text) {
+    text = text.trim();
+    if (!text) return;
+    state.items.push({ id: state.nextId++, text: text, erledigt: false });
+    save();
+    render();
+  }
+
+  function toggleItem(id) {
+    var item = state.items.find(function(i) { return i.id === id; });
+    if (item) { item.erledigt = !item.erledigt; save(); render(); }
+  }
+
+  function deleteItem(id) {
+    state.items = state.items.filter(function(i) { return i.id !== id; });
+    state.nextId = Math.max(0, ...state.items.map(function(i) { return i.id; })) + 1;
+    save();
+    render();
+  }
+
+  function render() {
+    var items = state.items;
+    var open = items.filter(function(i) { return !i.erledigt; }).length;
+    var done = items.length - open;
+    counterEl.textContent = open + ' offen · ' + done + ' erledigt · ' + items.length + ' gesamt';
+
+    if (filter === 'open') items = items.filter(function(i) { return !i.erledigt; });
+    if (filter === 'done') items = items.filter(function(i) { return i.erledigt; });
+
+    listEl.innerHTML = '';
+    if (items.length === 0) {
+      listEl.innerHTML = '\u003cdiv class="empty"\u003e\u003cdiv class="big"\u003e🛒\u003c/div\u003e\u003cp\u003e' +
+        (filter === 'all' ? 'Liste ist leer — füge Artikel hinzu!' :
+         filter === 'open' ? 'Alles erledigt! 🎉' : 'Noch nichts erledigt.') +
+        '\u003c/p\u003e\u003c/div\u003e';
+      return;
+    }
+
+    items.forEach(function(item) {
+      var div = document.createElement('div');
+      div.className = 'item' + (item.erledigt ? ' done' : '');
+      div.innerHTML =
+        '\u003cdiv class="checkbox"\u003e\u003c/div\u003e' +
+        '\u003cspan class="item-text"\u003e\u003c/span\u003e' +
+        '\u003cbutton class="delete-btn"\u003e✕\u003c/button\u003e';
+      div.querySelector('.item-text').textContent = item.text;
+
+      div.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-btn')) return;
+        toggleItem(item.id);
+      });
+      div.querySelector('.delete-btn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        deleteItem(item.id);
+      });
+      listEl.appendChild(div);
+    });
+  }
+
+  addBtn.addEventListener('click', function() {
+    addItem(inputEl.value);
+    inputEl.value = '';
+    inputEl.focus();
+  });
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      addItem(inputEl.value);
+      inputEl.value = '';
+    }
+  });
+
+  var filterBtns = document.querySelectorAll('.filter-btn');
+  filterBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      filterBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      filter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  listEl.innerHTML = '\u003cdiv class="empty"\u003e\u003cdiv class="big"\u003e⏳\u003c/div\u003e\u003cp\u003eLade Einkaufsliste…\u003c/p\u003e\u003c/div\u003e';
+  load();
+
+  window.debugEinkaufsliste = function() {
+    console.log('State:', state);
+    console.log('loaded:', loaded, 'loadFailed:', loadFailed, 'pendingSave:', pendingSave);
+    return state;
+  };
+})();
+</script>
+</body>
+</html>
