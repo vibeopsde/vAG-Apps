@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Minesweeper</title>
 <!--
   MIT License
@@ -35,7 +35,7 @@
 {
   "id": "vibeops.minesweeper",
   "name": "Minesweeper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "vibeops",
   "category": "Games",
   "description": "Der klassische Klassiker: Finde alle Minen, ohne sie zu berühren!",
@@ -46,43 +46,65 @@
 }
 </script>
 <style>
+:root {
+  --cell-size: 32px;
+  --board-gap: 1px;
+  --board-padding: 2px;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
   height: 100%; overflow: hidden; background: #1a1a2e;
   font-family: 'Segoe UI', Arial, sans-serif;
   display: flex; align-items: center; justify-content: center;
   color: #fff; user-select: none; -webkit-user-select: none;
+  touch-action: manipulation;
 }
-#wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#wrap {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; padding: 8px; width: 100%; height: 100%;
+  max-height: 100vh;
+}
+#diffs {
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+}
+.diff-btn {
+  background: #3d3d5c; color: #fff; border: 2px solid #555577;
+  border-radius: 8px; padding: 5px 10px; font-size: 0.85em;
+  cursor: pointer; font-weight: bold; white-space: nowrap;
+}
+.diff-btn.active { background: #5c5c8a; border-color: #7a7aaa; }
+.diff-btn:active { transform: scale(0.95); }
 #topbar {
-  display: flex; align-items: center; gap: 16px;
-  background: #2d2d44; border-radius: 10px; padding: 8px 16px;
-  font-size: 1.1em; font-weight: bold;
+  display: flex; align-items: center; gap: 12px;
+  background: #2d2d44; border-radius: 10px; padding: 6px 14px;
+  font-size: 1em; font-weight: bold;
 }
-#topbar .digital { font-family: 'Courier New', monospace; font-size: 1.3em; color: #ff5555; text-shadow: 0 0 8px rgba(255,80,80,0.5); min-width: 50px; text-align: center; }
-#face { font-size: 1.5em; cursor: pointer; background: #3d3d5c; border: 2px solid #555577; border-radius: 8px; padding: 2px 10px; }
+#topbar .digital { font-family: 'Courier New', monospace; font-size: 1.2em; color: #ff5555; text-shadow: 0 0 8px rgba(255,80,80,0.5); min-width: 44px; text-align: center; }
+#face { font-size: 1.4em; cursor: pointer; background: #3d3d5c; border: 2px solid #555577; border-radius: 8px; padding: 2px 10px; }
 #face:active { transform: scale(0.92); }
-#board { display: grid; gap: 1px; background: #444; padding: 2px; border-radius: 4px; }
-.cell {
-  width: 32px; height: 32px;
+#board-outer {
+  flex: 0 1 auto;
   display: flex; align-items: center; justify-content: center;
-  font-weight: bold; font-size: 1.0em; cursor: pointer;
-  border-radius: 2px;
+  min-height: 0;
+  width: 100%;
+}
+#board {
+  display: grid; gap: var(--board-gap); background: #444; padding: var(--board-padding); border-radius: 4px;
+  grid-template-columns: repeat(var(--cols), var(--cell-size));
+  grid-template-rows: repeat(var(--rows), var(--cell-size));
+}
+.cell {
+  width: var(--cell-size); height: var(--cell-size);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: calc(var(--cell-size) * 0.55); line-height: 1;
+  cursor: pointer; border-radius: 2px;
 }
 .cell.hidden { background: #6a8aad; box-shadow: inset 1px 1px 0 #8aaacd, inset -1px -1px 0 #4a6a8d; }
 .cell.hidden:active { box-shadow: inset 1px 1px 3px rgba(0,0,0,0.4); }
 .cell.revealed { background: #c0c0c0; border: 1px solid #999; box-shadow: none; }
 .cell.mine { background: #ff4444; }
 .cell.flagged { background: #6a8aad; }
-#status { font-size: 1.0em; opacity: 0.8; min-height: 1.2em; }
-.diff-btn {
-  background: #3d3d5c; color: #fff; border: 2px solid #555577;
-  border-radius: 8px; padding: 6px 14px; font-size: 0.9em;
-  cursor: pointer; font-weight: bold;
-}
-.diff-btn.active { background: #5c5c8a; border-color: #7a7aaa; }
-.diff-btn:active { transform: scale(0.95); }
-#diffs { display: flex; gap: 8px; }
+#status { font-size: 0.85em; opacity: 0.8; min-height: 1.2em; text-align: center; }
 .n1 { color: #0066ff; } .n2 { color: #00aa00; } .n3 { color: #ff0000; }
 .n4 { color: #000099; } .n5 { color: #990000; } .n6 { color: #009999; }
 .n7 { color: #000000; } .n8 { color: #777777; }
@@ -101,7 +123,9 @@ html, body {
     <span id="face">🙂</span>
     <span class="digital" id="timer">000</span>
   </div>
-  <div id="board"></div>
+  <div id="board-outer">
+    <div id="board"></div>
+  </div>
   <div id="status">Links: Aufdecken · Rechts: Flagge</div>
 </div>
 
@@ -109,19 +133,23 @@ html, body {
 (async () => {
   const bridge = window.vibeAgentGo;
   const boardEl = document.getElementById('board');
+  const boardOuter = document.getElementById('board-outer');
   const mineCountEl = document.getElementById('mineCount');
   const timerEl = document.getElementById('timer');
   const faceEl = document.getElementById('face');
   const statusEl = document.getElementById('status');
   const diffBtns = document.querySelectorAll('.diff-btn');
+  const wrapEl = document.getElementById('wrap');
 
   const DIFFS = {
     easy:   { rows: 9,  cols: 9,  mines: 10 },
     medium: { rows: 16, cols: 16, mines: 40 },
     hard:   { rows: 16, cols: 30, mines: 99 }
   };
-
+  const MAX_CELL_SIZE = 32;
+  const MIN_CELL_SIZE = 18;
   const SAVE_PATH = 'apps/Games/vibeops.minesweeper/best-times.json';
+
   let cfg, grid, minesLeft, revealedCount, gameState, startTime, timerInterval, firstClick;
   let bestTimes = {};
   try {
@@ -130,6 +158,34 @@ html, body {
   } catch(e) {}
 
   function pad(n, len) { return String(n).padStart(len, '0'); }
+
+  function setCellSize() {
+    const { rows, cols } = cfg;
+    const wrapRect = wrapEl.getBoundingClientRect();
+    const topbarRect = document.getElementById('topbar').getBoundingClientRect();
+    const diffsRect = document.getElementById('diffs').getBoundingClientRect();
+    const statusRect = statusEl.getBoundingClientRect();
+    const gap = 8; // gap between wrap children
+    const padding = 16; // safety padding around edges
+
+    const usedH = topbarRect.height + diffsRect.height + statusRect.height + (gap * 4) + padding;
+    const availH = window.innerHeight - usedH;
+    const availW = window.innerWidth - padding;
+
+    const boardW = cols * MAX_CELL_SIZE + (cols - 1) * 1 + 4; // gap + padding
+    const boardH = rows * MAX_CELL_SIZE + (rows - 1) * 1 + 4;
+
+    const scaleW = availW / boardW;
+    const scaleH = availH / boardH;
+    const scale = Math.min(scaleW, scaleH, 1);
+
+    let cellSize = Math.floor(MAX_CELL_SIZE * scale);
+    cellSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, cellSize));
+
+    document.documentElement.style.setProperty('--cell-size', `${cellSize}px`);
+    document.documentElement.style.setProperty('--rows', rows);
+    document.documentElement.style.setProperty('--cols', cols);
+  }
 
   function init(diff) {
     cfg = DIFFS[diff];
@@ -151,12 +207,12 @@ html, body {
     mineCountEl.textContent = pad(mines, 3);
     faceEl.textContent = '🙂';
     statusEl.textContent = 'Links: Aufdecken · Rechts: Flagge';
+    setCellSize();
     renderBoard();
   }
 
   function renderBoard() {
     const { rows, cols } = cfg;
-    boardEl.style.gridTemplateColumns = `repeat(${cols}, 32px)`;
     boardEl.innerHTML = '';
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
@@ -400,19 +456,14 @@ html, body {
     }
   });
 
-  function fitScale() {
-    const bw = boardEl.offsetWidth;
-    const bh = boardEl.offsetHeight;
-    const availW = window.innerWidth - 40;
-    const availH = window.innerHeight - 160;
-    const s = Math.min(availW / bw, availH / bh, 1);
-    boardEl.style.transform = `scale(${s})`;
-    boardEl.style.transformOrigin = 'center top';
+  function onResize() {
+    if (!cfg) return;
+    setCellSize();
   }
 
   init('easy');
-  setTimeout(fitScale, 100);
-  const ro = new ResizeObserver(() => { if (boardEl.offsetWidth) fitScale(); });
+  window.addEventListener('resize', onResize);
+  const ro = new ResizeObserver(() => onResize());
   ro.observe(document.body);
 
 })();
