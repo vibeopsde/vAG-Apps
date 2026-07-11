@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-11T22:07:37.019Z",
-  "count": 3,
+  "generatedAt": "2026-07-11T22:15:49.261Z",
+  "count": 4,
   "apps": [
     {
       "id": "vibeops.example.calculator",
@@ -31,6 +31,25 @@
       "permissions": [
         "readFile",
         "writeFile",
+        "listFiles"
+      ]
+    },
+    {
+      "id": "vibeops.jpg-to-pdf",
+      "name": "JPG zu PDF Konverter",
+      "version": "1.0.0",
+      "author": "vibeops",
+      "category": "Productivity",
+      "description": "JPG-Bilder auswählen, sortieren, zuschneiden und als PDF exportieren. 100% lokal im Browser, keine Server-Uploads.",
+      "icon": "📄",
+      "entry": "index.html",
+      "path": "Productivity/vibeops.jpg-to-pdf",
+      "minVibeAgentGo": "2607.9.4",
+      "license": "MIT",
+      "permissions": [
+        "readFile",
+        "writeFile",
+        "writeFileBinary",
         "listFiles"
       ]
     },

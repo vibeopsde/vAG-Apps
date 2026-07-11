@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JPG zu PDF Konverter</title>
+<!--
+  MIT License
+
+  Copyright (c) 2026 Lars Greipl - vibeops.de
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+  NOTICE: This application was generated with assistance from AI models
+  (e.g. Kimi 2.7 Code, GLM 5.2). All AI-generated outputs were reviewed,
+  adapted, and released under the above license by Lars Greipl - vibeops.de.
+-->
+<script type="application/vnd.vag+json">
+{
+  "id": "vibeops.jpg-to-pdf",
+  "name": "JPG zu PDF Konverter",
+  "version": "1.0.0",
+  "author": "vibeops",
+  "category": "Productivity",
+  "description": "JPG-Bilder auswählen, sortieren, zuschneiden und als PDF exportieren. 100% lokal im Browser, keine Server-Uploads.",
+  "icon": "📄",
+  "permissions": ["readFile", "writeFile", "writeFileBinary", "listFiles"],
+  "minVibeAgentGo": "2607.9.4",
+  "license": "MIT"
+}
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1419; --surface: #1a2332; --surface2: #243447;
+    --accent: #3b82f6; --accent2: #60a5fa; --text: #e2e8f0;
+    --text-muted: #94a3b8; --border: #334155; --success: #22c55e;
+    --danger: #ef4444; --radius: 12px;
+  }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); height: 100%;
+    overflow: hidden; user-select: none; -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  #app {
+    height: 100%; display: flex; flex-direction: column; align-items: center;
+  }
+  .scroll {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    width: 100%; padding: 16px;
+  }
+  .container { max-width: 600px; width: 100%; margin: 0 auto; }
+  h1 { text-align: center; margin-bottom: 8px; font-size: 1.6rem; }
+  .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem; }
+  .dropzone {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 40px 20px; text-align: center; cursor: pointer;
+    transition: border-color .2s, background .2s; background: var(--surface);
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent); background: var(--surface2);
+  }
+  .dropzone-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .dropzone-text { color: var(--text-muted); font-size: 0.9rem; }
+  .dropzone-text strong { color: var(--accent2); }
+  .options {
+    background: var(--surface); border-radius: var(--radius);
+    padding: 16px; margin-top: 16px;
+  }
+  .option-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; flex-wrap: wrap; gap: 8px;
+  }
+  .option-row + .option-row { border-top: 1px solid var(--border); }
+  .option-row label { font-size: 0.9rem; color: var(--text-muted); }
+  select, input[type="text"] {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font-size: 0.85rem;
+  }
+  .file-list { margin-top: 16px; }
+  .file-item {
+    display: flex; align-items: center; gap: 12px; background: var(--surface);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+  }
+  .file-item img {
+    width: 48px; height: 48px; border-radius: 6px; object-fit: cover;
+    flex-shrink: 0; background: var(--surface2);
+  }
+  .file-item .info { flex: 1; min-width: 0; }
+  .file-item .name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-item .size { font-size: 0.75rem; color: var(--text-muted); }
+  .file-item .dims { font-size: 0.72rem; color: var(--text-muted); }
+  .file-item .remove {
+    background: var(--danger); color: #fff; border: none; border-radius: 6px;
+    width: 28px; height: 28px; cursor: pointer; font-size: 1rem; flex-shrink: 0;
+  }
+  .btn {
+    width: 100%; margin-top: 16px; padding: 14px; font-size: 1rem; font-weight: 600;
+    border: none; border-radius: var(--radius); cursor: pointer; transition: background .2s, opacity .2s;
+  }
+  .btn-convert { background: var(--accent); color: #fff; }
+  .btn-convert:hover:not(:disabled) { background: var(--accent2); }
+  .btn-download { background: var(--success); color: #fff; font-size: 1.05rem; }
+  .btn-download:hover { opacity: 0.9; }
+  .btn-clear {
+    background: transparent; color: var(--text-muted); border: 1px solid var(--border);
+    font-weight: 400; font-size: 0.85rem; padding: 10px;
+  }
+  .btn-clear:hover { background: var(--surface); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status {
+    text-align: center; margin-top: 12px; font-size: 0.85rem; color: var(--text-muted);
+    min-height: 1.2em;
+  }
+  .status.error { color: var(--danger); }
+  .status.success { color: var(--success); }
+  .reorder-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; text-align: center; }
+  .move-btns { display: flex; flex-direction: column; gap: 2px; }
+  .move-btn {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 4px; width: 22px; height: 18px; cursor: pointer; font-size: 0.7rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .move-btn:disabled { opacity: 0.3; cursor: default; }
+  .checkbox-wrap { display: flex; align-items: center; gap: 6px; }
+  .checkbox-wrap input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .hidden { display: none !important; }
+  .crop-btn {
+    background: var(--surface2); color: var(--accent2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem;
+    flex-shrink: 0; margin-right: 4px;
+  }
+  .crop-btn:hover { background: var(--accent); color: #fff; }
+  .crop-badge {
+    background: var(--accent); color: #fff; font-size: 0.65rem; padding: 1px 5px;
+    border-radius: 4px; margin-left: 4px;
+  }
+
+  /* Crop Modal */
+  .crop-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 9999; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .crop-overlay.active { display: flex; }
+  .crop-title { color: #fff; font-size: 1rem; margin-bottom: 12px; }
+  .crop-canvas-wrap {
+    position: relative; max-width: 90%; max-height: 55vh;
+    border: 2px solid var(--border); border-radius: 8px; overflow: hidden;
+    touch-action: none;
+  }
+  #cropCanvas { display: block; max-width: 100%; max-height: 55vh; }
+  #cropOverlayCanvas {
+    position: absolute; top: 0; left: 0; pointer-events: none;
+  }
+  .crop-hint { color: var(--text-muted); font-size: 0.8rem; margin-top: 8px; text-align: center; }
+  .crop-controls {
+    margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  }
+  .crop-controls button {
+    padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.9rem;
+    cursor: pointer; font-weight: 600;
+  }
+  .crop-apply { background: var(--success); color: #fff; }
+  .crop-reset { background: var(--surface2); color: var(--text); border: 1px solid var(--border) !important; }
+  .crop-cancel { background: var(--danger); color: #fff; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="scroll">
+    <div class="container">
+      <h1>📄 JPG zu PDF</h1>
+      <p class="subtitle">Bilder auswählen, sortieren und als PDF herunterladen – 100% lokal im Browser</p>
+
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-icon">🖼️</div>
+        <div class="dropzone-text"><strong>Klicken zum Auswählen</strong> oder JPGs hierher ziehen</div>
+        <input type="file" id="fileInput" accept="image/jpeg,image/jpg,.jpg,.jpeg" multiple style="display:none">
+      </div>
+
+      <div class="options" id="optionsBox" style="display:none">
+        <div class="option-row">
+          <label>Seitengröße</label>
+          <select id="pageSize">
+            <option value="auto">Auto (Bildgröße)</option>
+            <option value="a4">A4 Hochformat</option>
+            <option value="a4l">A4 Querformat</option>
+            <option value="letter">US Letter Hochformat</option>
+            <option value="letterl">US Letter Querformat</option>
+          </select>
+        </div>
+        <div class="option-row">
+          <label>Ausrichtung</label>
+          <select id="orientation">
+            <option value="center">Zentriert (Passgenau)</option>
+            <option value="fit">Einpassen (Ohne Rand)</option>
+            <option value="stretch">Vollflächig (Verzerren)</option>
+          </select>
+        </div>
+        <div class="option-row">
+          <label>Hintergrund</label>
+          <select id="bgColor">
+            <option value="#ffffff">Weiß</option>
+            <option value="#000000">Schwarz</option>
+            <option value="#f0f0f0">Hellgrau</option>
+          </select>
+        </div>
+        <div class="option-row">
+          <label>Dateiname</label>
+          <input type="text" id="outName" value="ausgabe.pdf" style="width:160px">
+        </div>
+        <div class="option-row">
+          <label>Qualität (JPEG)</label>
+          <select id="quality">
+            <option value="0.92">Hoch (92%)</option>
+            <option value="1.0">Verlustfrei (100%)</option>
+            <option value="0.75">Mittel (75%)</option>
+            <option value="0.5">Niedrig (50%)</option>
+          </select>
+        </div>
+        <div class="option-row">
+          <label>Optionen</label>
+          <div class="checkbox-wrap"><input type="checkbox" id="compress" checked><span style="font-size:0.8rem;color:var(--text-muted)">Bilder neu encodieren (kleinere PDFs)</span></div>
+        </div>
+      </div>
+
+      <div class="file-list" id="fileList"></div>
+      <p class="reorder-hint" id="reorderHint" style="display:none">↑↓ Buttons zum Sortieren</p>
+
+      <button class="btn btn-convert" id="convertBtn" style="display:none">📄 PDF erzeugen</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-download" id="downloadBtn" style="display:none;flex:1">⬇️ PDF herunterladen</button>
+        <button class="btn btn-download" id="saveBtn" style="display:none;flex:1;background:#6366f1">💾 In Workspace speichern</button>
+      </div>
+      <button class="btn btn-clear" id="clearBtn" style="display:none">Alle entfernen</button>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Crop Modal -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-title" id="cropTitle">Bild zuschneiden</div>
+  <div class="crop-canvas-wrap" id="cropCanvasWrap">
+    <canvas id="cropCanvas"></canvas>
+    <canvas id="cropOverlayCanvas"></canvas>
+  </div>
+  <div class="crop-hint">Ziehe ein Rechteck über den Bereich, der erhalten bleiben soll</div>
+  <div class="crop-controls">
+    <button class="crop-reset" id="cropResetBtn">↺ Zurücksetzen</button>
+    <button class="crop-cancel" id="cropCancelBtn">Abbrechen</button>
+    <button class="crop-apply" id="cropApplyBtn">✂️ Zuschneiden</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const APP_DIR = 'apps/Productivity/vibeops.jpg-to-pdf';
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const fileList = document.getElementById('fileList');
+  const convertBtn = document.getElementById('convertBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const statusEl = document.getElementById('status');
+  const optionsBox = document.getElementById('optionsBox');
+  const reorderHint = document.getElementById('reorderHint');
+
+  let images = [];
+  let lastBlob = null;
+  let lastPdfBytes = null;
+  let lastOutName = 'ausgabe.pdf';
+
+  // === PDF Writer ===
+  function concatBytes(arrays) {
+    let total = 0;
+    for (const a of arrays) total += a.length;
+    const result = new Uint8Array(total);
+    let pos = 0;
+    for (const a of arrays) { result.set(a, pos); pos += a.length; }
+    return result;
+  }
+
+  function hexToRGB(hex) {
+    return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+  }
+
+  function buildPDF(pages, opts) {
+    const enc = new TextEncoder();
+    let objects = [];
+    let objNum = 0;
+    function addObj(bytes) { objNum++; objects.push(bytes); return objNum; }
+
+    const catalogNum = addObj(null);
+    const pagesNum = addObj(null);
+    const pageObjNums = [];
+    const bgRGB = opts.bgColor && opts.bgColor !== '#ffffff' ? hexToRGB(opts.bgColor) : null;
+
+    pages.forEach((page) => {
+      const { jpegBytes, w, h, pw, ph } = page;
+
+      // Image XObject
+      const imgNum = addObj(null);
+      const imgHeader = enc.encode(
+        `${imgNum} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`
+      );
+      const imgFooter = enc.encode('\nendstream\nendobj\n');
+      objects[imgNum - 1] = concatBytes([imgHeader, jpegBytes, imgFooter]);
+
+      // Content stream
+      let contentStr = '';
+      if (bgRGB) {
+        contentStr += `${bgRGB[0]/255} ${bgRGB[1]/255} ${bgRGB[2]/255} rg\n0 0 ${pw} ${ph} re f\n`;
+      }
+      if (opts.orientation === 'stretch') {
+        contentStr += `q\n${pw} 0 0 ${ph} 0 0 cm\n/Im1 Do\nQ\n`;
+      } else {
+        const scale = Math.min(pw / w, ph / h);
+        const dw = w * scale, dh = h * scale;
+        const ox = (pw - dw) / 2, oy = (ph - dh) / 2;
+        contentStr += `q\n${dw} 0 0 ${dh} ${ox} ${oy} cm\n/Im1 Do\nQ\n`;
+      }
+
+      const contentNum = addObj(null);
+      const contentBytes = enc.encode(contentStr);
+      const contentHeader = enc.encode(`${contentNum} 0 obj\n<< /Length ${contentBytes.length} >>\nstream\n`);
+      const contentFooter = enc.encode('\nendstream\nendobj\n');
+      objects[contentNum - 1] = concatBytes([contentHeader, contentBytes, contentFooter]);
+
+      const pageNum = addObj(null);
+      objects[pageNum - 1] = enc.encode(
+        `${pageNum} 0 obj\n<< /Type /Page /Parent ${pagesNum} 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im1 ${imgNum} 0 R >> >> /Contents ${contentNum} 0 R >>\nendobj\n`
+      );
+      pageObjNums.push(pageNum);
+    });
+
+    objects[catalogNum - 1] = enc.encode(`${catalogNum} 0 obj\n<< /Type /Catalog /Pages ${pagesNum} 0 R >>\nendobj\n`);
+    objects[pagesNum - 1] = enc.encode(`${pagesNum} 0 obj\n<< /Type /Pages /Kids [${pageObjNums.map(n => n + ' 0 R').join(' ')}] /Count ${pageObjNums.length} >>\nendobj\n`);
+
+    const header = enc.encode('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+    let offset = header.length;
+    const offsets = [0];
+    for (let i = 0; i < objects.length; i++) { offsets.push(offset); offset += objects[i].length; }
+
+    let xrefStr = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+    for (let i = 0; i < objects.length; i++) xrefStr += String(offsets[i+1]).padStart(10,'0') + ' 00000 n \n';
+
+    const xrefOffset = offset;
+    const trailer = enc.encode(xrefStr + `trailer\n<< /Size ${objects.length + 1} /Root ${catalogNum} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`);
+
+    return concatBytes([header, ...objects, trailer]);
+  }
+
+  // === Image loading ===
+  function loadImageDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => resolve({ dataUrl: e.target.result, width: img.naturalWidth, height: img.naturalHeight, name: file.name, file });
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function processImageToJPEG(imgData, quality, compress) {
+    if (!compress) {
+      const resp = await fetch(imgData.dataUrl);
+      const blob = await resp.blob();
+      return { jpegBytes: new Uint8Array(await blob.arrayBuffer()), w: imgData.width, h: imgData.height };
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = imgData.width;
+    canvas.height = imgData.height;
+    const ctx = canvas.getContext('2d');
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = imgData.dataUrl; });
+    ctx.drawImage(img, 0, 0);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', parseFloat(quality)));
+    return { jpegBytes: new Uint8Array(await blob.arrayBuffer()), w: imgData.width, h: imgData.height };
+  }
+
+  function getPageDims(sizeKey) {
+    switch (sizeKey) {
+      case 'a4': return [595, 842];
+      case 'a4l': return [842, 595];
+      case 'letter': return [612, 792];
+      case 'letterl': return [792, 612];
+      default: return null;
+    }
+  }
+
+  // === UI ===
+  async function handleFiles(files) {
+    const jpgFiles = Array.from(files).filter(f => /\.(jpe?g)$/i.test(f.name) || f.type === 'image/jpeg');
+    if (!jpgFiles.length) { setStatus('Keine JPG-Dateien gefunden.', 'error'); return; }
+    setStatus(`Lade ${jpgFiles.length} Bild(er)...`);
+    for (const f of jpgFiles) {
+      try { images.push(await loadImageDataUrl(f)); } catch (e) { console.error(e); }
+    }
+    renderList();
+    setStatus('');
+  }
+
+  function renderList() {
+    fileList.innerHTML = '';
+    optionsBox.style.display = images.length ? '' : 'none';
+    convertBtn.style.display = images.length ? '' : 'none';
+    clearBtn.style.display = images.length ? '' : 'none';
+    reorderHint.style.display = images.length > 1 ? '' : 'none';
+    downloadBtn.style.display = 'none';
+    saveBtn.style.display = 'none';
+    lastBlob = null;
+    lastPdfBytes = null;
+
+    images.forEach((img, idx) => {
+      const div = document.createElement('div');
+      div.className = 'file-item';
+      div.innerHTML = `
+        <img src="${img.dataUrl}" alt="">
+        <div class="info">
+          <div class="name">${idx + 1}. ${img.name}</div>
+          <div class="size">${formatSize(img.file.size)}</div>
+          <div class="dims">${img.width} × ${img.height} px</div>
+        </div>
+        <button class="crop-btn" data-action="crop" title="Zuschneiden">✂️${img.crop ? '<span class="crop-badge">✓</span>' : ''}</button>
+        <div class="move-btns">
+          <button class="move-btn" data-action="up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+          <button class="move-btn" data-action="down" ${idx === images.length - 1 ? 'disabled' : ''}>▼</button>
+        </div>
+        <button class="remove" data-action="remove">✕</button>
+      `;
+      fileList.appendChild(div);
+    });
+
+    fileList.querySelectorAll('.file-item').forEach((item, idx) => {
+      item.querySelector('[data-action="up"]').onclick = () => { if (idx > 0) { [images[idx-1], images[idx]] = [images[idx], images[idx-1]]; renderList(); } };
+      item.querySelector('[data-action="down"]').onclick = () => { if (idx < images.length - 1) { [images[idx+1], images[idx]] = [images[idx], images[idx+1]]; renderList(); } };
+      item.querySelector('[data-action="remove"]').onclick = () => { images.splice(idx, 1); renderList(); };
+      item.querySelector('[data-action="crop"]').onclick = () => { openCropModal(idx); };
+    });
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  function setStatus(msg, type) {
+    statusEl.textContent = msg;
+    statusEl.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  // === Convert ===
+  convertBtn.addEventListener('click', async () => {
+    if (!images.length) return;
+    convertBtn.disabled = true;
+    downloadBtn.style.display = 'none';
+    setStatus('Verarbeite Bilder...');
+
+    try {
+      const quality = document.getElementById('quality').value;
+      const compress = document.getElementById('compress').checked;
+      const dims = getPageDims(document.getElementById('pageSize').value);
+      const orientation = document.getElementById('orientation').value;
+      const bgColor = document.getElementById('bgColor').value;
+      const sizeKey = document.getElementById('pageSize').value;
+
+      const pages = [];
+      for (let i = 0; i < images.length; i++) {
+        setStatus(`Verarbeite Bild ${i + 1}/${images.length}...`);
+        const processed = await processImageToJPEG(images[i], quality, compress);
+        let pw, ph;
+        if (dims) {
+          [pw, ph] = dims;
+          if (!sizeKey.endsWith('l')) {
+            const imgAspect = processed.w / processed.h;
+            if (imgAspect > 1 && pw / ph < 1) { [pw, ph] = [ph, pw]; }
+          }
+        } else {
+          pw = processed.w; ph = processed.h;
+        }
+        pages.push({ jpegBytes: processed.jpegBytes, w: processed.w, h: processed.h, pw, ph });
+      }
+
+      setStatus('Erstelle PDF...');
+      const pdfBytes = buildPDF(pages, { orientation, bgColor });
+
+      lastBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      lastOutName = (document.getElementById('outName').value || 'ausgabe.pdf');
+      if (!lastOutName.endsWith('.pdf')) lastOutName += '.pdf';
+
+      const sizeMB = (lastBlob.size / 1048576).toFixed(2);
+      lastPdfBytes = pdfBytes;
+      setStatus(`✅ PDF erstellt! ${pages.length} Seite(n), ${sizeMB} MB.`, 'success');
+      downloadBtn.style.display = '';
+      saveBtn.style.display = '';
+    } catch (e) {
+      console.error(e);
+      setStatus('Fehler: ' + e.message, 'error');
+    } finally {
+      convertBtn.disabled = false;
+    }
+  });
+
+  // === Download button ===
+  downloadBtn.addEventListener('click', () => {
+    if (!lastBlob) return;
+    const url = URL.createObjectURL(lastBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = lastOutName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setStatus(`⬇️ Download gestartet: ${lastOutName}`, 'success');
+  });
+
+  // === Save to workspace button ===
+  saveBtn.addEventListener('click', async () => {
+    if (!lastPdfBytes) return;
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ Speichere...';
+    try {
+      const savePath = `${APP_DIR}/${lastOutName}`;
+      if (window.vibeAgentGo && window.vibeAgentGo.writeFileBinary) {
+        await window.vibeAgentGo.writeFileBinary(savePath, Array.from(lastPdfBytes));
+        setStatus(`✅ Im Workspace gespeichert: ${savePath}`, 'success');
+      } else {
+        setStatus('Bridge-API nicht verfügbar – nutze Download.', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      setStatus('Fehler beim Speichern: ' + e.message, 'error');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 In Workspace speichern';
+    }
+  });
+
+  // === Crop Modal ===
+  const cropOverlay = document.getElementById('cropOverlay');
+  const cropCanvas = document.getElementById('cropCanvas');
+  const cropOverlayCanvas = document.getElementById('cropOverlayCanvas');
+  const cropCanvasWrap = document.getElementById('cropCanvasWrap');
+  const cropTitle = document.getElementById('cropTitle');
+  const cropApplyBtn = document.getElementById('cropApplyBtn');
+  const cropResetBtn = document.getElementById('cropResetBtn');
+  const cropCancelBtn = document.getElementById('cropCancelBtn');
+
+  let cropIdx = -1;
+  let cropRect = null;
+  let cropDragStart = null;
+  let cropDisplayImg = null;
+
+  function openCropModal(idx) {
+    cropIdx = idx;
+    const imgData = images[idx];
+    cropTitle.textContent = `Bild ${idx + 1} zuschneiden: ${imgData.name}`;
+
+    const img = new Image();
+    img.onload = () => {
+      const maxW = Math.min(window.innerWidth * 0.85, 500);
+      const maxH = window.innerHeight * 0.55;
+      const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+      const dispW = Math.round(img.naturalWidth * scale);
+      const dispH = Math.round(img.naturalHeight * scale);
+
+      cropCanvas.width = dispW;
+      cropCanvas.height = dispH;
+      cropCanvas.style.width = dispW + 'px';
+      cropCanvas.style.height = dispH + 'px';
+      const ctx = cropCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, dispW, dispH);
+
+      cropOverlayCanvas.width = dispW;
+      cropOverlayCanvas.height = dispH;
+      cropOverlayCanvas.style.width = dispW + 'px';
+      cropOverlayCanvas.style.height = dispH + 'px';
+
+      cropDisplayImg = { img, scale, dispW, dispH };
+      cropRect = imgData.crop
+        ? { x: imgData.crop.x * scale, y: imgData.crop.y * scale, w: imgData.crop.w * scale, h: imgData.crop.h * scale }
+        : null;
+      drawCropOverlay();
+      cropOverlay.classList.add('active');
+    };
+    img.src = imgData.dataUrl;
+  }
+
+  function drawCropOverlay() {
+    const ctx = cropOverlayCanvas.getContext('2d');
+    const { dispW, dispH } = cropDisplayImg;
+    ctx.clearRect(0, 0, dispW, dispH);
+
+    if (cropRect) {
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(0, 0, dispW, dispH);
+
+      ctx.clearRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+
+      ctx.fillStyle = '#3b82f6';
+      const hs = 6;
+      const corners = [
+        [cropRect.x, cropRect.y],
+        [cropRect.x + cropRect.w, cropRect.y],
+        [cropRect.x, cropRect.y + cropRect.h],
+        [cropRect.x + cropRect.w, cropRect.y + cropRect.h]
+      ];
+      corners.forEach(([cx, cy]) => ctx.fillRect(cx - hs/2, cy - hs/2, hs, hs));
+    }
+  }
+
+  function getCanvasPos(e) {
+    const rect = cropCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function onCropStart(e) {
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    cropDragStart = pos;
+    cropRect = { x: pos.x, y: pos.y, w: 0, h: 0 };
+    drawCropOverlay();
+  }
+
+  function onCropMove(e) {
+    if (!cropDragStart) return;
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    const x = Math.min(cropDragStart.x, pos.x);
+    const y = Math.min(cropDragStart.y, pos.y);
+    const w = Math.abs(pos.x - cropDragStart.x);
+    const h = Math.abs(pos.y - cropDragStart.y);
+    cropRect = { x, y, w, h };
+    drawCropOverlay();
+  }
+
+  function onCropEnd(e) {
+    if (e) e.preventDefault();
+    if (cropRect && (cropRect.w < 10 || cropRect.h < 10)) {
+      cropRect = null;
+      drawCropOverlay();
+    }
+    cropDragStart = null;
+  }
+
+  cropCanvasWrap.addEventListener('mousedown', onCropStart);
+  cropCanvasWrap.addEventListener('mousemove', onCropMove);
+  cropCanvasWrap.addEventListener('mouseup', onCropEnd);
+  cropCanvasWrap.addEventListener('mouseleave', onCropEnd);
+  cropCanvasWrap.addEventListener('touchstart', onCropStart, { passive: false });
+  cropCanvasWrap.addEventListener('touchmove', onCropMove, { passive: false });
+  cropCanvasWrap.addEventListener('touchend', onCropEnd);
+
+  cropResetBtn.addEventListener('click', () => { cropRect = null; drawCropOverlay(); });
+  cropCancelBtn.addEventListener('click', () => { cropOverlay.classList.remove('active'); cropIdx = -1; });
+
+  cropApplyBtn.addEventListener('click', async () => {
+    if (cropIdx < 0) return;
+    const imgData = images[cropIdx];
+
+    if (!cropRect || cropRect.w < 10 || cropRect.h < 10) {
+      delete imgData.crop;
+      cropOverlay.classList.remove('active');
+      renderList();
+      return;
+    }
+
+    const scale = cropDisplayImg.scale;
+    const cropX = Math.round(cropRect.x / scale);
+    const cropY = Math.round(cropRect.y / scale);
+    const cropW = Math.round(cropRect.w / scale);
+    const cropH = Math.round(cropRect.h / scale);
+
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = imgData.dataUrl; });
+    const canvas = document.createElement('canvas');
+    canvas.width = cropW;
+    canvas.height = cropH;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+    const newDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    imgData.dataUrl = newDataUrl;
+    imgData.width = cropW;
+    imgData.height = cropH;
+    imgData.crop = { x: cropX, y: cropY, w: cropW, h: cropH };
+    imgData.file = new File([await (await fetch(newDataUrl)).blob()], imgData.name, { type: 'image/jpeg' });
+
+    cropOverlay.classList.remove('active');
+    cropIdx = -1;
+    renderList();
+    setStatus(`✂️ Zugeschnitten auf ${cropW} × ${cropH} px`, 'success');
+  });
+
+  // === Events ===
+  dropzone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+  clearBtn.addEventListener('click', () => { images = []; renderList(); setStatus(''); });
+
+})();
+</script>
+</body>
+</html>
