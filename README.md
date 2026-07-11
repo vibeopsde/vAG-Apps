@@ -71,6 +71,12 @@ apps/
 - `Games`
 - `System`
 
+## Lokale Installation (kein separates Format nötig)
+
+Jede App ist ein normaler Workspace-Ordner. Um eine App lokal zu installieren, kann man den Ordner einfach nach `apps/<Category>/<id>/` kopieren oder forken. Der App Store bietet dafür ein komfortables UI.
+
+Nach dem Kopieren ist die App sofort sichtbar im **Explorer** und startbar per HTML/ProgramApp. Keine versteckten IndexedDB-Speicher, keine Registry.
+
 ## Tool Kit
 
 Das Tool Kit unter `scripts/` hilft beim Erstellen, Validieren und Veröffentlichen von Apps.
@@ -91,11 +97,15 @@ Das Tool Kit unter `scripts/` hilft beim Erstellen, Validieren und Veröffentlic
 ## Roadmap
 
 - [x] Manifest-Schema und README
-- [ ] Tool Kit (validate, build-index, release-check)
-- [ ] GitHub Actions CI
-- [ ] vibeAgentGo AppStore-App
-- [ ] Dynamische App-Registrierung in vibeAgentGo
-- [ ] Permission-Guard für Bridge-Requests
+- [x] Tool Kit (validate, build-index, release-check)
+- [x] GitHub Actions CI
+- [x] vibeAgentGo AppStore-App
+- [x] Dynamische App-Registrierung in vibeAgentGo
+- [x] Permission-Guard für Bridge-Requests
+- [x] Apps als Workspace-Dateien speichern (sichtbar im Explorer, forkbar)
+- [ ] Update-Mechanismus für installierte Apps
+- [ ] Eigene App-Symbole im Dock rendern
+- [ ] CORS-Proxy für externe App-Quellen
 
 ## License
 
