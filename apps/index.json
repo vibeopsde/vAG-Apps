@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-11T13:31:28.301Z",
+  "generatedAt": "2026-07-11T21:08:49.787Z",
   "count": 1,
   "apps": [
     {
@@ -9,10 +9,10 @@
       "author": "vibeops",
       "category": "Productivity",
       "description": "Eine einfache Taschenrechner-App für vibeAgentGo.",
-      "icon": "vibeops.example.calculator/assets/icon.svg",
+      "icon": "🧮",
       "entry": "index.html",
       "path": "Productivity/vibeops.example.calculator",
-      "minVibeAgentGo": "2607.9.0",
+      "minVibeAgentGo": "2607.9.4",
       "license": "MIT",
       "permissions": []
     }

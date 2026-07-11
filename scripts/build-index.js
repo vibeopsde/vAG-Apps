@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // ============================================================
-// vAG-Apps — build apps/index.json from all app manifests
+// vAG-Apps — build apps/index.json from all single-HTML app manifests
 // ============================================================
 
 import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseManifest } from './lib/manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const APPS_DIR = join(__dirname, '..', 'apps');
@@ -26,13 +27,18 @@ async function buildIndex() {
       const appStat = await stat(appPath).catch(() => null);
       if (!appStat?.isDirectory()) continue;
 
-      const manifestPath = join(appPath, 'vAG-app.json');
-      const manifestStat = await stat(manifestPath).catch(() => null);
-      if (!manifestStat) continue;
+      const htmlPath = join(appPath, 'index.html');
+      const htmlStat = await stat(htmlPath).catch(() => null);
+      if (!htmlStat) continue;
 
       try {
-        const raw = await readFile(manifestPath, 'utf8');
-        const manifest = JSON.parse(raw);
+        const raw = await readFile(htmlPath, 'utf8');
+        const parsed = parseManifest(raw);
+        if (parsed.error || !parsed.manifest) {
+          console.error(`❌ ${htmlPath}: ${parsed.error}`);
+          continue;
+        }
+        const manifest = parsed.manifest;
         entries.push({
           id: manifest.id ?? appId,
           name: manifest.name ?? appId,
@@ -40,15 +46,15 @@ async function buildIndex() {
           author: manifest.author ?? '',
           category: manifest.category ?? category,
           description: manifest.description ?? '',
-          icon: manifest.icon ? `${appId}/${manifest.icon}` : null,
-          entry: manifest.entry ?? 'index.html',
+          icon: typeof manifest.icon === 'string' ? manifest.icon : null,
+          entry: 'index.html',
           path: `${category}/${appId}`,
           minVibeAgentGo: manifest.minVibeAgentGo ?? null,
           license: manifest.license ?? null,
           permissions: manifest.permissions ?? [],
         });
       } catch (e) {
-        console.error(`❌ Failed to parse ${manifestPath}: ${e.message}`);
+        console.error(`❌ Failed to read ${htmlPath}: ${e.message}`);
       }
     }
   }

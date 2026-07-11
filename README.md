@@ -1,14 +1,14 @@
 # vAG-Apps — App Store für vibeAgentGo
 
 Offizieller App-Store für [vibeAgentGo](https://github.com/vibeopsde/vibeAgentGo).
-Jeder kann Apps einreichen — als Bundle mit einem `vAG-app.json`-Manifest.
+Jede App ist eine **einzige, selbständige HTML-Datei** mit eingebettetem Manifest.
 
 ## App einreichen
 
 1. Repo forken.
 2. Neue App unter `apps/<Kategorie>/<app-id>/` ablegen.
-3. Ein `vAG-app.json` und ein `index.html` anlegen.
-4. Icons oder Assets optional unter `assets/` ablegen.
+3. Eine `index.html` mit eingebettetem Manifest anlegen.
+4. Zusätzliche Daten (z.B. JSON-Einstellungen) optional im gleichen Ordner ablegen.
 5. Pull Request öffnen.
 
 ## Beispiel-Struktur
@@ -17,15 +17,15 @@ Jeder kann Apps einreichen — als Bundle mit einem `vAG-app.json`-Manifest.
 apps/
 └── Productivity/
     └── example.calculator/
-        ├── vAG-app.json
-        ├── index.html
-        └── assets/
-            └── icon.svg
+        └── index.html
 ```
 
-## Manifest-Schema `vAG-app.json`
+## Manifest-Format
 
-```json
+Das Manifest wird direkt in den `<head>` der `index.html` eingebettet:
+
+```html
+<script type="application/vnd.vag+json">
 {
   "id": "deinname.appname",
   "name": "AppName",
@@ -33,12 +33,12 @@ apps/
   "author": "Dein Name",
   "category": "Productivity",
   "description": "Kurze Beschreibung der App.",
-  "icon": "assets/icon.svg",
-  "entry": "index.html",
+  "icon": "🚀",
   "permissions": ["readFile", "listFiles", "sendMessage"],
-  "minVibeAgentGo": "2607.9.0",
+  "minVibeAgentGo": "2607.9.4",
   "license": "MIT"
 }
+</script>
 ```
 
 ### Pflichtfelder
@@ -50,14 +50,13 @@ apps/
 | `version` | `string` | Semver-Version, z.B. `1.0.0`. |
 | `author` | `string` | Name oder Alias des Autors. |
 | `category` | `string` | Eine der erlaubten Kategorien. |
-| `entry` | `string` | Pfad zur HTML-Einstiegsdatei, relativ zum App-Ordner. |
 
 ### Optionale Felder
 
 | Feld | Typ | Beschreibung |
 |------|-----|--------------|
 | `description` | `string` | Kurze Beschreibung für den Store. |
-| `icon` | `string` | Pfad zum App-Icon, relativ zum App-Ordner. |
+| `icon` | `string` | Ein einzelnes Emoji als App-Icon (z.B. `🚀`). |
 | `permissions` | `string[]` | Liste der erlaubten Bridge-Actions. |
 | `minVibeAgentGo` | `string` | Mindestversion von vibeAgentGo. |
 | `license` | `string` | Lizenz der App. |
@@ -71,11 +70,11 @@ apps/
 - `Games`
 - `System`
 
-## Lokale Installation (kein separates Format nötig)
+## Lokale Installation
 
-Jede App ist ein normaler Workspace-Ordner. Um eine App lokal zu installieren, kann man den Ordner einfach nach `apps/<Category>/<id>/` kopieren oder forken. Der App Store bietet dafür ein komfortables UI.
+Jede App ist ein normaler Workspace-Ordner. Um eine App lokal zu installieren, kopiere sie nach `apps/<Category>/<id>/`. Der App Store bietet dafür ein komfortables UI.
 
-Nach dem Kopieren ist die App sofort sichtbar im **Explorer** und startbar per HTML/ProgramApp. Keine versteckten IndexedDB-Speicher, keine Registry.
+Nach dem Kopieren ist die App sofort im **Explorer** sichtbar und startbar. Keine versteckten IndexedDB-Speicher, keine Registry.
 
 ## Tool Kit
 
@@ -83,7 +82,7 @@ Das Tool Kit unter `scripts/` hilft beim Erstellen, Validieren und Veröffentlic
 
 | Befehl | Beschreibung |
 |--------|-------------|
-| `npm run validate` | Prüft alle Apps auf Schema, Assets und Sicherheit. |
+| `npm run validate` | Prüft alle Apps auf Schema und Sicherheit. |
 | `npm run build:index` | Erzeugt `apps/index.json` für den App Store. |
 | `npm run release:check` | Prüft Versions- und Autor-Rechte vor einem Merge. |
 
@@ -103,6 +102,7 @@ Das Tool Kit unter `scripts/` hilft beim Erstellen, Validieren und Veröffentlic
 - [x] Dynamische App-Registrierung in vibeAgentGo
 - [x] Permission-Guard für Bridge-Requests
 - [x] Apps als Workspace-Dateien speichern (sichtbar im Explorer, forkbar)
+- [x] Single-HTML-Format mit eingebettetem Manifest und Emoji-Icon
 - [ ] Update-Mechanismus für installierte Apps
 - [ ] Eigene App-Symbole im Dock rendern
 - [ ] CORS-Proxy für externe App-Quellen
