@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-11T21:08:49.787Z",
-  "count": 1,
+  "generatedAt": "2026-07-11T21:41:44.971Z",
+  "count": 2,
   "apps": [
     {
       "id": "vibeops.example.calculator",
@@ -15,6 +15,23 @@
       "minVibeAgentGo": "2607.9.4",
       "license": "MIT",
       "permissions": []
+    },
+    {
+      "id": "vibeops.minesweeper",
+      "name": "Minesweeper",
+      "version": "1.0.0",
+      "author": "vibeops",
+      "category": "Games",
+      "description": "Der klassische Klassiker: Finde alle Minen, ohne sie zu berühren!",
+      "icon": "💣",
+      "entry": "index.html",
+      "path": "Games/vibeops.minesweeper",
+      "minVibeAgentGo": "2607.9.4",
+      "license": "MIT",
+      "permissions": [
+        "readFile",
+        "writeFile"
+      ]
     }
   ]
 }

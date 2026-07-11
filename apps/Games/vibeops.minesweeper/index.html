@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Minesweeper</title>
+<!--
+  MIT License
+
+  Copyright (c) 2026 Lars Greipl - vibeops.de
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+  NOTICE: This application was generated with assistance from AI models
+  (e.g. Kimi 2.7 Code, GLM 5.2). All AI-generated outputs were reviewed,
+  adapted, and released under the above license by Lars Greipl - vibeops.de.
+-->
+<script type="application/vnd.vag+json">
+{
+  "id": "vibeops.minesweeper",
+  "name": "Minesweeper",
+  "version": "1.0.0",
+  "author": "vibeops",
+  "category": "Games",
+  "description": "Der klassische Klassiker: Finde alle Minen, ohne sie zu berühren!",
+  "icon": "💣",
+  "permissions": ["readFile", "writeFile"],
+  "minVibeAgentGo": "2607.9.4",
+  "license": "MIT"
+}
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  height: 100%; overflow: hidden; background: #1a1a2e;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; user-select: none; -webkit-user-select: none;
+}
+#wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#topbar {
+  display: flex; align-items: center; gap: 16px;
+  background: #2d2d44; border-radius: 10px; padding: 8px 16px;
+  font-size: 1.1em; font-weight: bold;
+}
+#topbar .digital { font-family: 'Courier New', monospace; font-size: 1.3em; color: #ff5555; text-shadow: 0 0 8px rgba(255,80,80,0.5); min-width: 50px; text-align: center; }
+#face { font-size: 1.5em; cursor: pointer; background: #3d3d5c; border: 2px solid #555577; border-radius: 8px; padding: 2px 10px; }
+#face:active { transform: scale(0.92); }
+#board { display: grid; gap: 1px; background: #444; padding: 2px; border-radius: 4px; }
+.cell {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: 1.0em; cursor: pointer;
+  border-radius: 2px;
+}
+.cell.hidden { background: #6a8aad; box-shadow: inset 1px 1px 0 #8aaacd, inset -1px -1px 0 #4a6a8d; }
+.cell.hidden:active { box-shadow: inset 1px 1px 3px rgba(0,0,0,0.4); }
+.cell.revealed { background: #c0c0c0; border: 1px solid #999; box-shadow: none; }
+.cell.mine { background: #ff4444; }
+.cell.flagged { background: #6a8aad; }
+#status { font-size: 1.0em; opacity: 0.8; min-height: 1.2em; }
+.diff-btn {
+  background: #3d3d5c; color: #fff; border: 2px solid #555577;
+  border-radius: 8px; padding: 6px 14px; font-size: 0.9em;
+  cursor: pointer; font-weight: bold;
+}
+.diff-btn.active { background: #5c5c8a; border-color: #7a7aaa; }
+.diff-btn:active { transform: scale(0.95); }
+#diffs { display: flex; gap: 8px; }
+.n1 { color: #0066ff; } .n2 { color: #00aa00; } .n3 { color: #ff0000; }
+.n4 { color: #000099; } .n5 { color: #990000; } .n6 { color: #009999; }
+.n7 { color: #000000; } .n8 { color: #777777; }
+</style>
+</head>
+<body>
+
+<div id="wrap">
+  <div id="diffs">
+    <button class="diff-btn active" data-diff="easy">Leicht 9×9</button>
+    <button class="diff-btn" data-diff="medium">Mittel 16×16</button>
+    <button class="diff-btn" data-diff="hard">Schwer 16×30</button>
+  </div>
+  <div id="topbar">
+    <span class="digital" id="mineCount">010</span>
+    <span id="face">🙂</span>
+    <span class="digital" id="timer">000</span>
+  </div>
+  <div id="board"></div>
+  <div id="status">Links: Aufdecken · Rechts: Flagge</div>
+</div>
+
+<script>
+(async () => {
+  const bridge = window.vibeAgentGo;
+  const boardEl = document.getElementById('board');
+  const mineCountEl = document.getElementById('mineCount');
+  const timerEl = document.getElementById('timer');
+  const faceEl = document.getElementById('face');
+  const statusEl = document.getElementById('status');
+  const diffBtns = document.querySelectorAll('.diff-btn');
+
+  const DIFFS = {
+    easy:   { rows: 9,  cols: 9,  mines: 10 },
+    medium: { rows: 16, cols: 16, mines: 40 },
+    hard:   { rows: 16, cols: 30, mines: 99 }
+  };
+
+  const SAVE_PATH = 'apps/Games/vibeops.minesweeper/best-times.json';
+  let cfg, grid, minesLeft, revealedCount, gameState, startTime, timerInterval, firstClick;
+  let bestTimes = {};
+  try {
+    const res = await bridge.readFile(SAVE_PATH);
+    if (res && res.ok && res.data) bestTimes = JSON.parse(res.data);
+  } catch(e) {}
+
+  function pad(n, len) { return String(n).padStart(len, '0'); }
+
+  function init(diff) {
+    cfg = DIFFS[diff];
+    const { rows, cols, mines } = cfg;
+    grid = [];
+    for (let r = 0; r < rows; r++) {
+      const row = [];
+      for (let c = 0; c < cols; c++) {
+        row.push({ mine: false, revealed: false, flagged: false, count: 0 });
+      }
+      grid.push(row);
+    }
+    minesLeft = mines;
+    revealedCount = 0;
+    gameState = 'ready';
+    firstClick = true;
+    if (timerInterval) clearInterval(timerInterval);
+    timerEl.textContent = pad(0, 3);
+    mineCountEl.textContent = pad(mines, 3);
+    faceEl.textContent = '🙂';
+    statusEl.textContent = 'Links: Aufdecken · Rechts: Flagge';
+    renderBoard();
+  }
+
+  function renderBoard() {
+    const { rows, cols } = cfg;
+    boardEl.style.gridTemplateColumns = `repeat(${cols}, 32px)`;
+    boardEl.innerHTML = '';
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell hidden';
+        cell.dataset.r = r;
+        cell.dataset.c = c;
+        boardEl.appendChild(cell);
+      }
+    }
+  }
+
+  function placeMines(safeR, safeC) {
+    const { rows, cols, mines } = cfg;
+    let placed = 0;
+    while (placed < mines) {
+      const r = Math.floor(Math.random() * rows);
+      const c = Math.floor(Math.random() * cols);
+      if (grid[r][c].mine) continue;
+      if (Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
+      grid[r][c].mine = true;
+      placed++;
+    }
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (grid[r][c].mine) continue;
+        let cnt = 0;
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc].mine) cnt++;
+          }
+        }
+        grid[r][c].count = cnt;
+      }
+    }
+  }
+
+  function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+      const t = Math.floor((Date.now() - startTime) / 1000);
+      timerEl.textContent = pad(Math.min(t, 999), 3);
+    }, 200);
+  }
+
+  function getCellEl(r, c) {
+    return boardEl.children[r * cfg.cols + c];
+  }
+
+  function reveal(r, c) {
+    const { rows, cols } = cfg;
+    if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+    const cell = grid[r][c];
+    if (cell.revealed || cell.flagged) return;
+    cell.revealed = true;
+    revealedCount++;
+    const el = getCellEl(r, c);
+    el.className = 'cell revealed';
+
+    if (cell.mine) {
+      el.classList.add('mine');
+      el.textContent = '💣';
+      return;
+    }
+
+    if (cell.count > 0) {
+      el.textContent = cell.count;
+      el.classList.add('n' + cell.count);
+    } else {
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          reveal(r + dr, c + dc);
+        }
+      }
+    }
+  }
+
+  function toggleFlag(r, c) {
+    const cell = grid[r][c];
+    if (cell.revealed) return;
+    cell.flagged = !cell.flagged;
+    const el = getCellEl(r, c);
+    if (cell.flagged) {
+      el.classList.add('flagged');
+      el.textContent = '🚩';
+      minesLeft--;
+    } else {
+      el.classList.remove('flagged');
+      el.textContent = '';
+      minesLeft++;
+    }
+    mineCountEl.textContent = pad(minesLeft, 3);
+  }
+
+  function gameWon() {
+    return revealedCount === cfg.rows * cfg.cols - cfg.mines;
+  }
+
+  function gameLost(r, c) {
+    gameState = 'lost';
+    clearInterval(timerInterval);
+    faceEl.textContent = '😵';
+    for (let rr = 0; rr < cfg.rows; rr++) {
+      for (let cc = 0; cc < cfg.cols; cc++) {
+        if (grid[rr][cc].mine && !grid[rr][cc].revealed) {
+          const el = getCellEl(rr, cc);
+          el.className = 'cell revealed';
+          el.textContent = '💣';
+        }
+        if (grid[rr][cc].flagged && !grid[rr][cc].mine) {
+          const el = getCellEl(rr, cc);
+          el.className = 'cell revealed';
+          el.textContent = '❌';
+        }
+      }
+    }
+    statusEl.textContent = '💥 Verloren! Klick auf 😊';
+  }
+
+  async function gameWonHandler() {
+    gameState = 'won';
+    clearInterval(timerInterval);
+    faceEl.textContent = '😎';
+    const t = Math.floor((Date.now() - startTime) / 1000);
+    const diffKey = Object.keys(DIFFS).find(k => DIFFS[k].rows === cfg.rows && DIFFS[k].cols === cfg.cols);
+    let bestText = '';
+    if (!bestTimes[diffKey] || t < bestTimes[diffKey]) {
+      bestTimes[diffKey] = t;
+      try { await bridge.writeFile(SAVE_PATH, JSON.stringify(bestTimes)); } catch(e) {}
+      bestText = ' 🏆 NEUER REKORD!';
+    } else {
+      bestText = ` Best: ${bestTimes[diffKey]}s`;
+    }
+    statusEl.textContent = `🎉 Gewonnen in ${t}s!${bestText} · Klick auf 😊`;
+  }
+
+  // INPUT HANDLING
+  let holdTimer = null;
+  let holdR = -1, holdC = -1;
+
+  boardEl.addEventListener('contextmenu', e => e.preventDefault());
+
+  boardEl.addEventListener('mousedown', e => {
+    if (gameState === 'lost' || gameState === 'won') return;
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
+
+    if (e.button === 2) {
+      e.preventDefault();
+      toggleFlag(r, c);
+    } else if (e.button === 0) {
+      holdR = r; holdC = c;
+      holdTimer = setTimeout(() => {
+        toggleFlag(holdR, holdC);
+        holdTimer = null;
+      }, 400);
+    }
+  });
+
+  boardEl.addEventListener('mouseup', e => {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+      const cell = e.target.closest('.cell');
+      if (!cell) return;
+      const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
+      doReveal(r, c);
+    }
+  });
+
+  boardEl.addEventListener('mouseleave', () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  });
+
+  // Touch
+  boardEl.addEventListener('touchstart', e => {
+    if (gameState === 'lost' || gameState === 'won') return;
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el || !el.classList.contains('cell')) return;
+    const r = parseInt(el.dataset.r), c = parseInt(el.dataset.c);
+    holdR = r; holdC = c;
+    holdTimer = setTimeout(() => {
+      toggleFlag(holdR, holdC);
+      holdTimer = null;
+    }, 450);
+  }, { passive: false });
+
+  boardEl.addEventListener('touchend', e => {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+      const cell = e.target.closest('.cell');
+      if (cell) {
+        const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
+        doReveal(r, c);
+      }
+    }
+  });
+
+  function doReveal(r, c) {
+    if (gameState === 'lost' || gameState === 'won') return;
+    const cell = grid[r][c];
+    if (cell.flagged || cell.revealed) return;
+    if (firstClick) {
+      firstClick = false;
+      placeMines(r, c);
+      startTimer();
+      gameState = 'playing';
+    }
+    if (cell.mine) {
+      reveal(r, c);
+      gameLost(r, c);
+      return;
+    }
+    reveal(r, c);
+    if (gameWon()) gameWonHandler();
+  }
+
+  faceEl.addEventListener('click', () => {
+    const activeDiff = document.querySelector('.diff-btn.active').dataset.diff;
+    init(activeDiff);
+  });
+
+  diffBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      diffBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      init(btn.dataset.diff);
+    });
+  });
+
+  boardEl.setAttribute('tabindex', '0');
+  boardEl.addEventListener('keydown', e => {
+    if (e.key === 'r' || e.key === 'R') {
+      const activeDiff = document.querySelector('.diff-btn.active').dataset.diff;
+      init(activeDiff);
+    }
+  });
+
+  function fitScale() {
+    const bw = boardEl.offsetWidth;
+    const bh = boardEl.offsetHeight;
+    const availW = window.innerWidth - 40;
+    const availH = window.innerHeight - 160;
+    const s = Math.min(availW / bw, availH / bh, 1);
+    boardEl.style.transform = `scale(${s})`;
+    boardEl.style.transformOrigin = 'center top';
+  }
+
+  init('easy');
+  setTimeout(fitScale, 100);
+  const ro = new ResizeObserver(() => { if (boardEl.offsetWidth) fitScale(); });
+  ro.observe(document.body);
+
+})();
+</script>
+</body>
+</html>
