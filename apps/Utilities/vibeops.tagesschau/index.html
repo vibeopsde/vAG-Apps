@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tagesschau Reader</title>
+<!--
+  MIT License
+
+  Copyright (c) 2026 Lars Greipl - vibeops.de
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+  NOTICE: This application was generated with assistance from AI models
+  (e.g. Kimi 2.7 Code, GLM 5.2). All AI-generated outputs were reviewed,
+  adapted, and released under the above license by Lars Greipl - vibeops.de.
+-->
+<script type="application/vnd.vag+json">
+{
+  "id": "vibeops.tagesschau",
+  "name": "Tagesschau Reader",
+  "version": "1.0.0",
+  "author": "vibeops",
+  "category": "Utilities",
+  "description": "Aktuelle Tagesschau-Nachrichten direkt im vibeAgentGo lesen.",
+  "icon": "📰",
+  "permissions": [],
+  "minVibeAgentGo": "2607.9.4",
+  "license": "MIT"
+}
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #f4f4f4;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff;
+}
+header {
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 16px 20px 12px;
+  border-bottom: 2px solid #ddd;
+  background: #fff;
+}
+header h1 { color: #cc0000; font-size: 1.5rem; margin: 0; }
+header .subtitle { color: #666; font-size: 0.85rem; margin-top: 4px; }
+#controls {
+  flex: 0 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+}
+button {
+  background: #cc0000;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+button:hover { background: #a00000; }
+button:disabled { background: #ccc; cursor: not-allowed; }
+#status {
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  color: #666;
+  padding: 4px 20px 8px;
+  background: #fff;
+}
+#content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0 20px 20px;
+}
+.news-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.news-item {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.news-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.news-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+.news-title a {
+  color: #cc0000;
+  text-decoration: none;
+}
+.news-title a:hover { text-decoration: underline; }
+.news-meta {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 6px;
+}
+.news-desc {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.5;
+}
+.news-desc img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin-top: 10px;
+  display: block;
+}
+.empty-state, .loading, .error {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+.error { color: #cc0000; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Tagesschau RSS Reader</h1>
+    <div class="subtitle">Aktuelle Nachrichten aus Deutschland und der Welt</div>
+  </header>
+  <div id="controls">
+    <button id="loadBtn">Aktuelle Nachrichten laden</button>
+    <button id="refreshBtn" disabled>Neu laden</button>
+  </div>
+  <div id="status">Klicke auf "Laden", um die Nachrichten zu holen.</div>
+  <div id="content">
+    <div class="empty-state">Noch keine Nachrichten geladen.</div>
+  </div>
+</div>
+
+<script>
+const RSS_URL = 'https://www.tagesschau.de/xml/rss2';
+const PROXY_PREFIX = '/api/proxy/?url=';
+
+const loadBtn = document.getElementById('loadBtn');
+const refreshBtn = document.getElementById('refreshBtn');
+const statusEl = document.getElementById('status');
+const container = document.getElementById('content');
+
+function stripTags(html) {
+  if (!html) return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function parseRSS(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'application/xml');
+  const parserError = doc.querySelector('parsererror');
+  if (parserError) throw new Error('XML konnte nicht geparst werden');
+
+  const items = Array.from(doc.querySelectorAll('item'));
+  return items.map(item => {
+    const title = item.querySelector('title')?.textContent || 'Keine Überschrift';
+    const link = item.querySelector('link')?.textContent || '#';
+    const pubDate = item.querySelector('pubDate')?.textContent || '';
+    const description = item.querySelector('description')?.textContent || '';
+    return { title, link, pubDate, description };
+  });
+}
+
+async function fetchRSS() {
+  loadBtn.disabled = true;
+  refreshBtn.disabled = true;
+  statusEl.textContent = 'Lade Nachrichten über Proxy...';
+  container.innerHTML = '<div class="loading">Warte auf Antwort...</div>';
+
+  try {
+    const url = PROXY_PREFIX + encodeURIComponent(RSS_URL);
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Proxy-Fehler: ${response.status} ${response.statusText}`);
+
+    const xmlText = await response.text();
+    const items = parseRSS(xmlText);
+
+    if (!items.length) throw new Error('Keine Nachrichten gefunden');
+
+    renderNews(items);
+    statusEl.textContent = `${items.length} Nachrichten erfolgreich geladen.`;
+    loadBtn.textContent = 'Erneut laden';
+    refreshBtn.disabled = false;
+  } catch (error) {
+    console.error('Fehler beim Laden:', error);
+    statusEl.textContent = `Fehler: ${error.message}`;
+    container.innerHTML = `
+      <div class="error">
+        <strong>Ups!</strong> Es gab ein Problem:<br>
+        ${error.message}<br><br>
+        <small>Stelle sicher, dass der vibeAgentGo-Proxy erreichbar ist.</small>
+      </div>
+    `;
+  } finally {
+    loadBtn.disabled = false;
+  }
+}
+
+function formatDate(pubDate) {
+  if (!pubDate) return '';
+  try {
+    const date = new Date(pubDate);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('de-DE', {
+        day: '2-digit', month: '2-digit', year: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+  } catch (e) {}
+  return pubDate;
+}
+
+function renderNews(items) {
+  let html = '<ul class="news-list">';
+  items.forEach(item => {
+    const dateStr = formatDate(item.pubDate);
+    const cleanDesc = stripTags(item.description).substring(0, 180) + (item.description.length > 180 ? '...' : '');
+    html += `
+      <li class="news-item">
+        <h3 class="news-title"><a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title}</a></h3>
+        ${dateStr ? `<div class="news-meta">Veröffentlicht: ${dateStr}</div>` : ''}
+        ${cleanDesc ? `<p class="news-desc">${cleanDesc}</p>` : ''}
+      </li>
+    `;
+  });
+  html += '</ul>';
+  container.innerHTML = html;
+}
+
+loadBtn.addEventListener('click', fetchRSS);
+refreshBtn.addEventListener('click', fetchRSS);
+</script>
+</body>
+</html>

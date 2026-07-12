@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-12T18:12:53.902Z",
-  "count": 7,
+  "generatedAt": "2026-07-12T18:14:38.077Z",
+  "count": 8,
   "apps": [
     {
       "id": "vibeops.games.2048",
@@ -121,6 +121,20 @@
         "readFile",
         "writeFile"
       ]
+    },
+    {
+      "id": "vibeops.tagesschau",
+      "name": "Tagesschau Reader",
+      "version": "1.0.0",
+      "author": "vibeops",
+      "category": "Utilities",
+      "description": "Aktuelle Tagesschau-Nachrichten direkt im vibeAgentGo lesen.",
+      "icon": "📰",
+      "entry": "index.html",
+      "path": "Utilities/vibeops.tagesschau",
+      "minVibeAgentGo": "2607.9.4",
+      "license": "MIT",
+      "permissions": []
     }
   ]
 }
