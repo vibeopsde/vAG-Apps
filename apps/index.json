@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-12T18:37:28.539Z",
-  "count": 8,
+  "generatedAt": "2026-07-12T18:55:35.453Z",
+  "count": 9,
   "apps": [
     {
       "id": "vibeops.games.2048",
@@ -99,6 +99,23 @@
       "entry": "index.html",
       "path": "Games/vibeops.minesweeper",
       "minVibeAgentGo": "2607.9.4",
+      "license": "MIT",
+      "permissions": [
+        "readFile",
+        "writeFile"
+      ]
+    },
+    {
+      "id": "vibeops.proxy-test",
+      "name": "Proxy Test",
+      "version": "1.0.0",
+      "author": "vibeops",
+      "category": "Utilities",
+      "description": "Debug-Tool: Zeigt, ob window.corsFetch, window.vibeAgentGo und der /api/proxy/-Endpunkt im iframe funktionieren.",
+      "icon": "🧪",
+      "entry": "index.html",
+      "path": "Utilities/vibeops.proxy-test",
+      "minVibeAgentGo": "2607.9.6",
       "license": "MIT",
       "permissions": [
         "readFile",

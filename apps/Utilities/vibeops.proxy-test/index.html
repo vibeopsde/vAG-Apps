@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Proxy Test</title>
+<!--
+  MIT License
+
+  Copyright (c) 2026 Lars Greipl - vibeops.de
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+  NOTICE: This application was generated with assistance from AI models
+  (e.g. Kimi 2.7 Code, GLM 5.2). All AI-generated outputs were reviewed,
+  adapted, and released under the above license by Lars Greipl - vibeops.de.
+-->
+<script type="application/vnd.vag+json">
+{
+  "id": "vibeops.proxy-test",
+  "name": "Proxy Test",
+  "version": "1.0.0",
+  "author": "vibeops",
+  "category": "Utilities",
+  "description": "Debug-Tool: Zeigt, ob window.corsFetch, window.vibeAgentGo und der /api/proxy/-Endpunkt im iframe funktionieren.",
+  "icon": "🧪",
+  "permissions": ["readFile", "writeFile"],
+  "minVibeAgentGo": "2607.9.6",
+  "license": "MIT"
+}
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; background: #0d1117; color: #e6edf3; font-family: system-ui, sans-serif; }
+#app { height: 100%; display: flex; flex-direction: column; padding: 12px; gap: 10px; }
+header { flex: 0 0 auto; }
+header h1 { font-size: 1.3rem; }
+#log { flex: 1 1 auto; overflow-y: auto; background: #161b22; border-radius: 8px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; line-height: 1.5; }
+.entry { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #30363d; }
+.entry.ok { color: #3fb950; }
+.entry.err { color: #f85149; }
+.entry.info { color: #58a6ff; }
+#controls { flex: 0 0 auto; display: flex; gap: 8px; flex-wrap: wrap; }
+button { background: #238636; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+button:active { background: #2ea043; }
+button.secondary { background: #1f6feb; }
+input { flex: 1 1 auto; padding: 10px; border-radius: 6px; border: 1px solid #30363d; background: #21262d; color: #e6edf3; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><h1>🧪 Proxy Test</h1></header>
+  <div id="controls">
+    <input id="urlInput" type="url" value="https://www.tagesschau.de/xml/rss2/" placeholder="URL zum Testen">
+    <button id="runBtn">Alle Tests</button>
+    <button id="clearBtn" class="secondary">Clear</button>
+  </div>
+  <div id="log"></div>
+</div>
+
+<script>
+const logEl = document.getElementById('log');
+const urlInput = document.getElementById('urlInput');
+const TEST_URL = 'https://www.tagesschau.de/xml/rss2/';
+
+function log(msg, type = 'info') {
+  const div = document.createElement('div');
+  div.className = `entry ${type}`;
+  div.innerHTML = `&lt;span style="opacity:0.7">${new Date().toLocaleTimeString('de-DE')}</span> ${msg}`;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+async function runTest(name, fn) {
+  log(`▶ ${name}...`, 'info');
+  try {
+    const result = await fn();
+    log(`✅ ${name}: ${result}`, 'ok');
+  } catch (e) {
+    log(`❌ ${name}: ${e.message || e}`, 'err');
+  }
+}
+
+function envInfo() {
+  log(`window.location.href: ${window.location.href}`, 'info');
+  log(`window.location.origin: ${window.location.origin || '(null)'}`, 'info');
+  log(`typeof window.vibeAgentGo: ${typeof window.vibeAgentGo}`, 'info');
+  log(`typeof window.corsFetch: ${typeof window.corsFetch}`, 'info');
+  log(`typeof window.proxiedUrl: ${typeof window.proxiedUrl}`, 'info');
+}
+
+async function testProxiedUrl() {
+  if (typeof window.proxiedUrl !== 'function') throw new Error('window.proxiedUrl fehlt');
+  const url = window.proxiedUrl(TEST_URL);
+  if (!url.includes('/api/proxy/')) throw new Error('proxiedUrl liefert keinen Proxy-Pfad: ' + url);
+  return url;
+}
+
+async function testCorsFetch() {
+  if (typeof window.corsFetch !== 'function') throw new Error('window.corsFetch fehlt');
+  const res = await window.corsFetch(TEST_URL);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  return `OK, ${text.length} bytes`;
+}
+
+async function testRawFetch() {
+  const res = await fetch(TEST_URL, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  return `OK, ${text.length} bytes`;
+}
+
+async function testBridgeReadWrite() {
+  if (typeof window.vibeAgentGo !== 'object') throw new Error('window.vibeAgentGo fehlt');
+  const file = 'proxy-test-debug.json';
+  const data = { testedAt: new Date().toISOString(), ok: true };
+  await window.vibeAgentGo.writeFile(file, JSON.stringify(data));
+  const res = await window.vibeAgentGo.readFile(file);
+  if (!res || !res.ok) throw new Error('readFile failed: ' + JSON.stringify(res));
+  const read = JSON.parse(res.data);
+  return `read/write OK: ${JSON.stringify(read)}`;
+}
+
+async function testCustomUrl() {
+  const url = urlInput.value.trim();
+  if (!url) throw new Error('Keine URL eingegeben');
+  if (typeof window.corsFetch !== 'function') throw new Error('window.corsFetch fehlt');
+  const res = await window.corsFetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  return `OK, ${text.length} bytes`;
+}
+
+function runAll() {
+  envInfo();
+  runTest('window.proxiedUrl', testProxiedUrl);
+  setTimeout(() => runTest('window.corsFetch', testCorsFetch), 200);
+  setTimeout(() => runTest('raw fetch (CORS)', testRawFetch), 400);
+  setTimeout(() => runTest('vibeAgentGo bridge read/write', testBridgeReadWrite), 600);
+}
+
+document.getElementById('runBtn').addEventListener('click', runAll);
+document.getElementById('clearBtn').addEventListener('click', () => logEl.innerHTML = '');
+urlInput.addEventListener('change', () => runTest('custom URL via corsFetch', testCustomUrl));
+
+// Auto-run on load
+setTimeout(runAll, 300);
+</script>
+</body>
+</html>
