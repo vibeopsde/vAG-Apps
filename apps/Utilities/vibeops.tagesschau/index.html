@@ -174,13 +174,20 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 </div>
 
 <script>
-const RSS_URL = 'https://www.tagesschau.de/xml/rss2';
-const PROXY_PREFIX = '/api/proxy/?url=';
+const RSS_URL = 'https://www.tagesschau.de/xml/rss2/';
 
 const loadBtn = document.getElementById('loadBtn');
 const refreshBtn = document.getElementById('refreshBtn');
 const statusEl = document.getElementById('status');
 const container = document.getElementById('content');
+
+function appFetch(url, init) {
+  if (typeof window !== 'undefined' && window.corsFetch) {
+    return window.corsFetch(url, init);
+  }
+  const origin = (typeof window !== 'undefined' && window.location && window.location.origin) || '';
+  return fetch(origin + '/api/proxy/?url=' + encodeURIComponent(url), init);
+}
 
 function stripTags(html) {
   if (!html) return '';
@@ -212,8 +219,7 @@ async function fetchRSS() {
   container.innerHTML = '<div class="loading">Warte auf Antwort...</div>';
 
   try {
-    const url = PROXY_PREFIX + encodeURIComponent(RSS_URL);
-    const response = await fetch(url, { cache: 'no-store' });
+    const response = await appFetch(RSS_URL, { cache: 'no-store' });
     if (!response.ok) throw new Error(`Proxy-Fehler: ${response.status} ${response.statusText}`);
 
     const xmlText = await response.text();
