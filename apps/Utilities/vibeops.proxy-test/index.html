@@ -35,7 +35,7 @@
 {
   "id": "vibeops.proxy-test",
   "name": "Proxy Test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "vibeops",
   "category": "Utilities",
   "description": "Debug-Tool: Zeigt, ob window.corsFetch, window.vibeAgentGo und der /api/proxy/-Endpunkt im iframe funktionieren.",
@@ -114,17 +114,35 @@ async function testProxiedUrl() {
 
 async function testCorsFetch() {
   if (typeof window.corsFetch !== 'function') throw new Error('window.corsFetch fehlt');
-  const res = await window.corsFetch(TEST_URL);
+  try {
+    const res = await window.corsFetch(TEST_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    return `OK, ${text.length} bytes`;
+  } catch (e) {
+    throw new Error(`${e.name}: ${e.message}`);
+  }
+}
+
+async function testProxiedUrlFetch() {
+  if (typeof window.proxiedUrl !== 'function') throw new Error('window.proxiedUrl fehlt');
+  const url = window.proxiedUrl(TEST_URL);
+  log(`   proxiedUrl: ${url}`, 'info');
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   return `OK, ${text.length} bytes`;
 }
 
 async function testRawFetch() {
-  const res = await fetch(TEST_URL, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const text = await res.text();
-  return `OK, ${text.length} bytes`;
+  try {
+    const res = await fetch(TEST_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    return `OK, ${text.length} bytes`;
+  } catch (e) {
+    throw new Error(`${e.name}: ${e.message}`);
+  }
 }
 
 async function testBridgeReadWrite() {
@@ -150,10 +168,10 @@ async function testCustomUrl() {
 
 function runAll() {
   envInfo();
-  runTest('window.proxiedUrl', testProxiedUrl);
-  setTimeout(() => runTest('window.corsFetch', testCorsFetch), 200);
-  setTimeout(() => runTest('raw fetch (CORS)', testRawFetch), 400);
-  setTimeout(() => runTest('vibeAgentGo bridge read/write', testBridgeReadWrite), 600);
+  setTimeout(() => runTest('window.proxiedUrl + fetch', testProxiedUrlFetch), 200);
+  setTimeout(() => runTest('window.corsFetch', testCorsFetch), 400);
+  setTimeout(() => runTest('raw fetch (CORS)', testRawFetch), 600);
+  setTimeout(() => runTest('vibeAgentGo bridge read/write', testBridgeReadWrite), 800);
 }
 
 document.getElementById('runBtn').addEventListener('click', runAll);

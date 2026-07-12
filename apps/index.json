@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T18:55:35.453Z",
+  "generatedAt": "2026-07-12T18:58:45.041Z",
   "count": 9,
   "apps": [
     {
@@ -108,7 +108,7 @@
     {
       "id": "vibeops.proxy-test",
       "name": "Proxy Test",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "vibeops",
       "category": "Utilities",
       "description": "Debug-Tool: Zeigt, ob window.corsFetch, window.vibeAgentGo und der /api/proxy/-Endpunkt im iframe funktionieren.",
