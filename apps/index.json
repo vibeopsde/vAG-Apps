@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-12T18:58:45.041Z",
-  "count": 9,
+  "generatedAt": "2026-07-18T21:30:08.449Z",
+  "count": 10,
   "apps": [
     {
       "id": "vibeops.games.2048",
@@ -152,6 +152,23 @@
       "minVibeAgentGo": "2607.9.4",
       "license": "MIT",
       "permissions": []
+    },
+    {
+      "id": "vibeops.vibemail",
+      "name": "vibeMail",
+      "version": "0.1.0",
+      "author": "vibeops",
+      "category": "Productivity",
+      "description": "JMAP Mail & Kalender Client für Stalwart",
+      "icon": "📧",
+      "entry": "index.html",
+      "path": "Productivity/vibeops.vibemail",
+      "minVibeAgentGo": "2607.9.4",
+      "license": "MIT",
+      "permissions": [
+        "readFile",
+        "writeFile"
+      ]
     }
   ]
 }
