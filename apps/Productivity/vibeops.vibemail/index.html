@@ -8,7 +8,7 @@
   {
     "id": "vibeops.vibemail",
     "name": "vibeMail",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "author": "vibeops",
     "category": "Productivity",
     "description": "JMAP Mail & Kalender Client für Stalwart",
@@ -960,11 +960,33 @@
       return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
     }
 
-    // Parse Stalwart's naive datetime (no Z, no offset) as UTC.
-    function parseStalwartDate(s) {
+    // Parse JMAP CalendarEvent datetimes per RFC 8984.
+    // - Explicit Z/offset in `start` → use directly (wins over timeZone)
+    // - Naive `start` + `timeZone` → interpret in that IANA zone
+    // - Naive `start`, no `timeZone` → legacy Stalwart normalization → UTC
+    function parseStalwartDate(s, timeZone) {
       if (!s) return null;
       if (s.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(s)) return new Date(s);
-      return new Date(s + 'Z');
+      const tz = timeZone || 'UTC';
+      try {
+        const [datePart, timePart] = s.split('T');
+        const [y, mo, d] = datePart.split('-').map(Number);
+        const [h, mi, sec = 0] = (timePart || '00:00:00').split(':').map(Number);
+        const guess = Date.UTC(y, mo - 1, d, h, mi, sec);
+        const fmt = new Intl.DateTimeFormat('en-US', {
+          timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+        const parts = Object.fromEntries(fmt.formatToParts(guess).map(p => [p.type, p.value]));
+        const asInTz = Date.UTC(
+          +parts.year, +parts.month - 1, +parts.day,
+          +parts.hour === 24 ? 0 : +parts.hour, +parts.minute, +parts.second
+        );
+        return new Date(guess - (asInTz - guess));
+      } catch (e) {
+        console.warn('parseStalwartDate fallback for', s, timeZone, e);
+        return new Date(s + 'Z');
+      }
     }
 
     async function loadCalendar() {
@@ -1015,12 +1037,12 @@
         const weekEnd = new Date(monday); weekEnd.setDate(monday.getDate() + 7); weekEnd.setHours(0, 0, 0, 0);
 
         const weekEvents = (events.list || []).filter(ev => {
-          const s = parseStalwartDate(ev.start);
+          const s = parseStalwartDate(ev.start, ev.timeZone);
           return s && s >= weekStart && s < weekEnd;
         });
 
         weekEvents.forEach(ev => {
-          const startDt = parseStalwartDate(ev.start);
+          const startDt = parseStalwartDate(ev.start, ev.timeZone);
           // Compute day index in *local* time so the event lands on the day the user expects
           const dayIndex = Math.floor((startDt - weekStart) / (1000 * 60 * 60 * 24));
           if (dayIndex < 0 || dayIndex >= 7) return;
@@ -1045,7 +1067,7 @@
     function goToday() { weekOffset = 0; loadCalendar(); }
 
     function showEventDetail(ev) {
-      const start = parseStalwartDate(ev.start);
+      const start = parseStalwartDate(ev.start, ev.timeZone);
       document.getElementById('eventTitle').textContent = ev.title || 'Termin';
       let when = start ? start.toLocaleString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
       if (ev.duration) when += ' (' + ev.duration.replace('PT', '').replace('H', ' Std. ').replace('M', ' Min.') + ')';
