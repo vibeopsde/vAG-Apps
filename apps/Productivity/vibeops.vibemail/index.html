@@ -8,7 +8,7 @@
   {
     "id": "vibeops.vibemail",
     "name": "vibeMail",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "author": "vibeops",
     "category": "Productivity",
     "description": "JMAP Mail & Kalender Client für Stalwart",
@@ -381,7 +381,7 @@
 
     async function jmapRequest(method, args) {
       const payload = {
-        using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail', 'urn:ietf:params:jmap:calendars'],
+        using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail', 'urn:ietf:params:jmap:calendars', 'urn:ietf:params:jmap:submission'],
         methodCalls: [[method, args, '0']]
       };
 

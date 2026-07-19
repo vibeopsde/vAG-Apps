@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T07:21:16.257Z",
+  "generatedAt": "2026-07-19T07:42:08.652Z",
   "count": 10,
   "apps": [
     {
@@ -156,7 +156,7 @@
     {
       "id": "vibeops.vibemail",
       "name": "vibeMail",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": "vibeops",
       "category": "Productivity",
       "description": "JMAP Mail & Kalender Client für Stalwart",
