@@ -8,7 +8,7 @@
   {
     "id": "vibeops.vibemail",
     "name": "vibeMail",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "author": "vibeops",
     "category": "Productivity",
     "description": "JMAP Mail & Kalender Client für Stalwart",
@@ -27,232 +27,214 @@
       color: #e6edf3;
       display: flex;
       flex-direction: column;
+      font-size: 14px;
     }
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-    }
+    #app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
     /* Header */
     .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: #161b22;
-      border-bottom: 1px solid #30363d;
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: #161b22; border-bottom: 1px solid #30363d;
+      flex-shrink: 0; gap: 8px;
     }
-    .header h1 {
-      font-size: 18px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .header-actions {
-      display: flex;
-      gap: 8px;
-    }
+    .header h1 { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .header-actions { display: flex; gap: 6px; }
     .btn {
-      padding: 6px 12px;
-      border: 1px solid #30363d;
-      background: #21262d;
-      color: #e6edf3;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: background 0.15s;
+      padding: 7px 12px; border: 1px solid #30363d; background: #21262d; color: #e6edf3;
+      border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.15s;
+      min-height: 34px; touch-action: manipulation;
     }
     .btn:hover { background: #30363d; }
-    .btn.primary {
-      background: #238636;
-      border-color: #238636;
-    }
+    .btn.primary { background: #238636; border-color: #238636; }
     .btn.primary:hover { background: #2ea043; }
+    .btn.icon { padding: 7px 10px; }
+
     /* Tabs */
     .tabs {
-      display: flex;
-      background: #161b22;
-      border-bottom: 1px solid #30363d;
-      flex-shrink: 0;
+      display: flex; background: #161b22; border-bottom: 1px solid #30363d; flex-shrink: 0;
     }
     .tab {
-      padding: 10px 20px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #8b949e;
-      border-bottom: 2px solid transparent;
-      transition: all 0.15s;
+      padding: 11px 18px; cursor: pointer; font-size: 14px; color: #8b949e;
+      border-bottom: 2px solid transparent; transition: all 0.15s; user-select: none;
     }
     .tab:hover { color: #e6edf3; }
-    .tab.active {
-      color: #e6edf3;
-      border-bottom-color: #f78166;
+    .tab.active { color: #e6edf3; border-bottom-color: #f78166; }
+    .tab .badge {
+      display: inline-block; background: #f78166; color: #0d1117; border-radius: 10px;
+      font-size: 11px; font-weight: 700; padding: 1px 7px; margin-left: 6px; min-width: 18px;
+      text-align: center;
     }
+
     /* Main content */
-    .content {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-    }
-    .panel {
-      display: none;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      flex-direction: column;
-    }
+    .content { flex: 1; overflow: hidden; display: flex; position: relative; }
+    .panel { display: none; width: 100%; height: 100%; overflow: hidden; flex-direction: column; }
     .panel.active { display: flex; }
-    /* Mail list */
-    .mail-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px;
+
+    /* Mail layout */
+    .mail-layout { display: flex; flex: 1; overflow: hidden; }
+    .mail-sidebar {
+      width: 180px; background: #161b22; border-right: 1px solid #30363d;
+      overflow-y: auto; flex-shrink: 0; padding: 8px 0;
     }
+    .folder-item {
+      padding: 10px 14px; cursor: pointer; font-size: 13px; color: #8b949e;
+      display: flex; justify-content: space-between; align-items: center;
+      border-left: 3px solid transparent; transition: all 0.1s;
+    }
+    .folder-item:hover { background: #21262d; color: #e6edf3; }
+    .folder-item.active { color: #e6edf3; background: #21262d; border-left-color: #f78166; }
+    .folder-item .count { font-size: 11px; color: #6e7681; }
+    .folder-item .count.unread { color: #f78166; font-weight: 700; }
+
+    .mail-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .mail-list { flex: 1; overflow-y: auto; }
     .mail-item {
-      padding: 12px;
-      border-bottom: 1px solid #21262d;
-      cursor: pointer;
-      transition: background 0.1s;
+      padding: 12px 14px; border-bottom: 1px solid #21262d; cursor: pointer; transition: background 0.1s;
     }
     .mail-item:hover { background: #161b22; }
     .mail-item.unread { font-weight: 600; }
-    .mail-item .from { font-size: 14px; margin-bottom: 4px; }
-    .mail-item .subject { font-size: 13px; color: #8b949e; margin-bottom: 2px; }
-    .mail-item .date { font-size: 12px; color: #6e7681; }
-    /* Mail detail */
+    .mail-item.unread .subject { color: #e6edf3; }
+    .mail-item .from { font-size: 14px; margin-bottom: 3px; }
+    .mail-item .subject { font-size: 13px; color: #8b949e; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mail-item .date { font-size: 11px; color: #6e7681; }
+
+    /* Mail detail overlay */
     .mail-detail {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: none;
+      position: absolute; inset: 0; background: #0d1117; overflow-y: auto;
+      padding: 16px; display: none; flex-direction: column; z-index: 10;
     }
-    .mail-detail.active { display: block; }
-    .mail-detail .header {
-      background: none;
-      border: none;
-      padding: 0 0 16px 0;
-      border-bottom: 1px solid #30363d;
-      margin-bottom: 16px;
+    .mail-detail.active { display: flex; }
+    .mail-detail .detail-header {
+      background: none; border: none; padding: 0 0 14px 0;
+      border-bottom: 1px solid #30363d; margin-bottom: 14px;
+      display: flex; flex-direction: column; align-items: stretch; gap: 8px;
     }
-    .mail-detail .subject { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .mail-detail .meta { font-size: 13px; color: #8b949e; margin-bottom: 4px; }
+    .detail-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .mail-detail .subject { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .mail-detail .meta { font-size: 13px; color: #8b949e; margin-bottom: 3px; }
     .mail-detail .body {
-      font-size: 14px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-    }
-    /* Compose */
-    .compose-form {
+      font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;
       flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: none;
-      flex-direction: column;
-      gap: 12px;
+    }
+    .mail-detail .body.html { white-space: normal; }
+    .mail-detail .body.html img { max-width: 100%; height: auto; }
+    .mail-detail .body.html a { color: #58a6ff; }
+
+    /* Compose overlay */
+    .compose-form {
+      position: absolute; inset: 0; background: #0d1117; overflow-y: auto;
+      padding: 16px; display: none; flex-direction: column; gap: 12px; z-index: 20;
     }
     .compose-form.active { display: flex; }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .compose-form .compose-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 12px; border-bottom: 1px solid #30363d;
     }
-    .form-group label {
-      font-size: 12px;
-      color: #8b949e;
-      font-weight: 500;
+    .compose-form h2 { font-size: 16px; font-weight: 600; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 12px; color: #8b949e; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select {
+      padding: 9px 12px; border: 1px solid #30363d; background: #0d1117; color: #e6edf3;
+      border-radius: 6px; font-size: 14px; font-family: inherit;
     }
-    .form-group input,
-    .form-group textarea {
-      padding: 8px 12px;
-      border: 1px solid #30363d;
-      background: #0d1117;
-      color: #e6edf3;
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: inherit;
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none; border-color: #58a6ff;
     }
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #58a6ff;
-    }
-    .form-group textarea {
-      min-height: 200px;
-      resize: vertical;
-    }
+    .form-group textarea { min-height: 180px; resize: vertical; }
+    .form-row { display: flex; gap: 8px; }
+    .form-row .form-group { flex: 1; }
+
     /* Calendar */
-    .calendar-view {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
+    .calendar-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: #161b22; border-bottom: 1px solid #30363d;
+      flex-shrink: 0; gap: 8px; flex-wrap: wrap;
     }
+    .calendar-toolbar .title { font-size: 15px; font-weight: 600; min-width: 180px; text-align: center; flex: 1; }
+    .calendar-view { flex: 1; overflow-y: auto; padding: 12px; }
     .calendar-week {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      margin-bottom: 16px;
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 12px;
     }
     .calendar-day {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      min-height: 100px;
-      padding: 8px;
+      background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+      min-height: 110px; padding: 6px; display: flex; flex-direction: column;
     }
+    .calendar-day.today { border-color: #f78166; background: #1c1410; }
     .calendar-day-header {
-      font-size: 12px;
-      color: #8b949e;
-      margin-bottom: 6px;
-      text-align: center;
+      font-size: 12px; color: #8b949e; margin-bottom: 6px; text-align: center;
+      font-weight: 500;
     }
+    .calendar-day.today .calendar-day-header { color: #f78166; font-weight: 700; }
     .calendar-event {
-      background: #1f6feb;
-      border-radius: 4px;
-      padding: 4px 6px;
-      margin-bottom: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      background: #1f6feb; border-radius: 4px; padding: 4px 6px; margin-bottom: 3px;
+      font-size: 11px; cursor: pointer; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; line-height: 1.3;
     }
+    .calendar-event:hover { background: #388bfd; }
     .calendar-event.private { background: #8957e5; }
-    /* Loading & empty states */
-    .loading {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      color: #8b949e;
+    .calendar-event .ev-time { opacity: 0.85; font-weight: 600; margin-right: 4px; }
+    .calendar-empty {
+      text-align: center; color: #6e7681; padding: 30px 10px; font-size: 13px;
     }
+
+    /* Event detail modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none;
+      align-items: center; justify-content: center; z-index: 50; padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+      padding: 20px; max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto;
+    }
+    .modal h3 { font-size: 16px; margin-bottom: 12px; }
+    .modal .meta { font-size: 13px; color: #8b949e; margin-bottom: 4px; }
+    .modal .desc { margin-top: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+    .modal .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+    /* Loading & empty */
+    .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: #8b949e; }
     .empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      color: #8b949e;
-      text-align: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 40px; color: #8b949e; text-align: center; gap: 8px;
     }
-    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-icon { font-size: 48px; }
+
     /* Setup form */
     .setup-form {
-      max-width: 400px;
-      margin: 40px auto;
-      padding: 24px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 12px;
+      max-width: 420px; margin: 40px auto; padding: 24px; background: #161b22;
+      border: 1px solid #30363d; border-radius: 12px;
     }
-    .setup-form h2 { margin-bottom: 16px; font-size: 18px; }
+    .setup-form h2 { margin-bottom: 6px; font-size: 18px; }
+    .setup-form .hint { font-size: 12px; color: #6e7681; margin-bottom: 16px; }
     .setup-form .form-group { margin-bottom: 12px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: #238636; color: #fff; padding: 10px 18px; border-radius: 8px;
+      font-size: 13px; z-index: 100; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .toast.error { background: #da3633; }
+    .toast.active { display: block; }
+
     /* Responsive */
-    @media (max-width: 640px) {
-      .calendar-week { grid-template-columns: repeat(3, 1fr); }
-      .header h1 { font-size: 16px; }
+    @media (max-width: 720px) {
+      .mail-sidebar { width: 140px; }
+      .calendar-week { grid-template-columns: repeat(7, 1fr); gap: 2px; }
+      .calendar-day { min-height: 70px; padding: 4px; }
+      .calendar-event { font-size: 10px; padding: 2px 4px; }
+      .header h1 { font-size: 15px; }
+      .tab { padding: 10px 12px; font-size: 13px; }
+    }
+    @media (max-width: 520px) {
+      .mail-layout { flex-direction: column; }
+      .mail-sidebar {
+        width: 100%; border-right: none; border-bottom: 1px solid #30363d;
+        display: flex; overflow-x: auto; overflow-y: hidden; padding: 4px;
+      }
+      .folder-item { border-left: none; border-bottom: 2px solid transparent; white-space: nowrap; padding: 8px 12px; }
+      .folder-item.active { border-bottom-color: #f78166; }
     }
   </style>
 </head>
@@ -261,119 +243,229 @@
     <!-- Setup Screen -->
     <div id="setupScreen" class="setup-form">
       <h2>📧 vibeMail Setup</h2>
+      <div class="hint">Verbinde dich mit deinem Stalwart JMAP-Server. Zugangsdaten werden im Workspace gespeichert.</div>
       <div class="form-group">
         <label>JMAP Server URL</label>
         <input type="text" id="setupUrl" placeholder="https://pim.vibeops.de" value="https://pim.vibeops.de">
       </div>
       <div class="form-group">
         <label>Benutzername</label>
-        <input type="text" id="setupUser" placeholder="lars.greipl">
+        <input type="text" id="setupUser" placeholder="lars.greipl" autocomplete="username">
       </div>
       <div class="form-group">
         <label>App-Passwort</label>
-        <input type="password" id="setupPass" placeholder="app_...">
+        <input type="password" id="setupPass" placeholder="app_..." autocomplete="current-password">
       </div>
-      <button class="btn primary" onclick="saveSetup()">Verbinden</button>
+      <button class="btn primary" onclick="saveSetup()" style="width:100%">Verbinden</button>
     </div>
 
-    <!-- Main App (hidden until setup) -->
+    <!-- Main App -->
     <div id="mainApp" style="display:none; flex-direction:column; height:100%;">
       <div class="header">
         <h1>📧 vibeMail</h1>
         <div class="header-actions">
-          <button class="btn" onclick="refreshAll()">🔄</button>
+          <button class="btn icon" onclick="refreshAll()" title="Aktualisieren">🔄</button>
           <button class="btn" onclick="showCompose()">✏️ Neu</button>
+          <button class="btn icon" onclick="logout()" title="Abmelden">⏻</button>
         </div>
       </div>
       <div class="tabs">
-        <div class="tab active" onclick="switchTab('mail')" data-tab="mail">📬 Posteingang</div>
+        <div class="tab active" onclick="switchTab('mail')" data-tab="mail">
+          📬 Posteingang<span class="badge" id="unreadBadge" style="display:none">0</span>
+        </div>
         <div class="tab" onclick="switchTab('calendar')" data-tab="calendar">📅 Kalender</div>
       </div>
       <div class="content">
         <!-- Mail Panel -->
         <div id="mailPanel" class="panel active">
-          <div id="mailList" class="mail-list">
-            <div class="loading">Lade Mails...</div>
-          </div>
-          <div id="mailDetail" class="mail-detail">
-            <div class="header">
-              <button class="btn" onclick="closeMailDetail()">← Zurück</button>
+          <div class="mail-layout">
+            <div class="mail-sidebar" id="mailSidebar"></div>
+            <div class="mail-main">
+              <div id="mailList" class="mail-list">
+                <div class="loading">Lade Mails...</div>
+              </div>
+              <div id="mailDetail" class="mail-detail">
+                <div class="detail-header">
+                  <div class="detail-actions">
+                    <button class="btn" onclick="closeMailDetail()">← Zurück</button>
+                    <button class="btn" onclick="replyMail()">↩️ Antworten</button>
+                    <button class="btn" onclick="forwardMail()">↪️ Weiterleiten</button>
+                    <button class="btn" onclick="deleteMail()" style="margin-left:auto">🗑️</button>
+                  </div>
+                  <div>
+                    <div class="subject" id="detailSubject"></div>
+                    <div class="meta" id="detailFrom"></div>
+                    <div class="meta" id="detailTo"></div>
+                    <div class="meta" id="detailDate"></div>
+                  </div>
+                </div>
+                <div class="body" id="detailBody"></div>
+              </div>
+              <div id="composePanel" class="compose-form">
+                <div class="compose-header">
+                  <h2 id="composeTitle">✏️ Neue Mail</h2>
+                  <button class="btn icon" onclick="hideCompose()">✕</button>
+                </div>
+                <div class="form-group">
+                  <label>An</label>
+                  <input type="email" id="composeTo" placeholder="empfaenger@example.com">
+                </div>
+                <div class="form-group">
+                  <label>Betreff</label>
+                  <input type="text" id="composeSubject" placeholder="Betreff">
+                </div>
+                <div class="form-group">
+                  <label>Nachricht</label>
+                  <textarea id="composeBody" placeholder="Nachricht..."></textarea>
+                </div>
+                <button class="btn primary" onclick="sendMail()">Senden</button>
+              </div>
             </div>
-            <div class="subject" id="detailSubject"></div>
-            <div class="meta" id="detailFrom"></div>
-            <div class="meta" id="detailDate"></div>
-            <div class="body" id="detailBody"></div>
           </div>
         </div>
         <!-- Calendar Panel -->
         <div id="calendarPanel" class="panel">
+          <div class="calendar-toolbar">
+            <button class="btn icon" onclick="prevWeek()">←</button>
+            <button class="btn" onclick="goToday()">Heute</button>
+            <div class="title" id="calendarTitle"></div>
+            <button class="btn" onclick="showNewEvent()">➕ Termin</button>
+            <button class="btn icon" onclick="nextWeek()">→</button>
+          </div>
           <div class="calendar-view">
             <div class="calendar-week" id="calendarWeek"></div>
-            <div id="calendarEvents"></div>
           </div>
         </div>
       </div>
-      <!-- Compose Panel -->
-      <div id="composePanel" class="compose-form">
-        <div class="header">
-          <h2>✏️ Neue Mail</h2>
-          <button class="btn" onclick="hideCompose()">✕</button>
+    </div>
+
+    <!-- Event Detail Modal -->
+    <div class="modal-overlay" id="eventModal" onclick="closeEventModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3 id="eventTitle"></h3>
+        <div class="meta" id="eventWhen"></div>
+        <div class="meta" id="eventLocation"></div>
+        <div class="desc" id="eventDesc"></div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeEventModal()">Schließen</button>
         </div>
-        <div class="form-group">
-          <label>An</label>
-          <input type="email" id="composeTo" placeholder="empfaenger@example.com">
-        </div>
-        <div class="form-group">
-          <label>Betreff</label>
-          <input type="text" id="composeSubject" placeholder="Betreff">
-        </div>
-        <div class="form-group">
-          <label>Nachricht</label>
-          <textarea id="composeBody" placeholder="Nachricht..."></textarea>
-        </div>
-        <button class="btn primary" onclick="sendMail()">Senden</button>
       </div>
     </div>
+
+    <!-- New Event Modal -->
+    <div class="modal-overlay" id="newEventModal" onclick="closeNewEventModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>➕ Neuer Termin</h3>
+        <div class="form-group">
+          <label>Titel</label>
+          <input type="text" id="newEventTitle" placeholder="Termin">
+        </div>
+        <div class="form-row" style="margin-top:10px">
+          <div class="form-group">
+            <label>Datum</label>
+            <input type="date" id="newEventDate">
+          </div>
+          <div class="form-group">
+            <label>Start</label>
+            <input type="time" id="newEventStart" value="10:00">
+          </div>
+          <div class="form-group">
+            <label>Ende</label>
+            <input type="time" id="newEventEnd" value="11:00">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:10px">
+          <label>Ort (optional)</label>
+          <input type="text" id="newEventLocation" placeholder="">
+        </div>
+        <div class="form-group" style="margin-top:10px">
+          <label>Beschreibung (optional)</label>
+          <textarea id="newEventDesc" style="min-height:80px"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeNewEventModal()">Abbrechen</button>
+          <button class="btn primary" onclick="saveNewEvent()">Speichern</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
   </div>
 
   <script>
     // ============================================================
-    // vibeMail — JMAP Client für Stalwart
+    // vibeMail v0.2.0 — JMAP Client für Stalwart
     // ============================================================
 
-    let jmapUrl = '';
-    let jmapUser = '';
-    let jmapPass = '';
-    let accountId = '';
-    let inboxId = '';
-    let identityId = '';
-    let currentView = 'list'; // 'list' | 'detail'
+    const APP_DIR = 'apps/Productivity/vibeops.vibemail';
+    const CONFIG_FILE = APP_DIR + '/config.json';
 
-    // --- Setup ---
+    let jmapUrl = '', jmapUser = '', jmapPass = '';
+    let accountId = '', identityId = '';
+    let mailboxes = [];           // all mailboxes
+    let currentMailboxId = null;  // selected folder
+    let currentMails = [];        // loaded list cache
+    let currentMail = null;       // opened mail (full)
+    let calendars = [];
+    let defaultCalendarId = null;
 
-    function saveSetup() {
-      jmapUrl = document.getElementById('setupUrl').value.replace(/\/$/, '');
-      jmapUser = document.getElementById('setupUser').value;
-      jmapPass = document.getElementById('setupPass').value;
+    // Calendar state: weekOffset = 0 means current week
+    let weekOffset = 0;
 
-      // Test connection: fetch the real accountId from the session first
-      jmapSession()
-        .then(session => {
-          accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
-          if (!accountId) throw new Error('Kein Mail-Account in der JMAP-Session gefunden');
-          return jmapRequest('Mailbox/get', { accountId, ids: null });
-        })
-        .then(() => {
-          document.getElementById('setupScreen').style.display = 'none';
-          document.getElementById('mainApp').style.display = 'flex';
-          init();
-        })
-        .catch(err => {
-          alert('Verbindung fehlgeschlagen: ' + err.message);
-        });
+    // ============================================================
+    // Bridge helpers (wait, read, write)
+    // ============================================================
+
+    async function waitForBridge(maxWait = 5000) {
+      let waited = 0;
+      while (!window.vibeAgentGo && waited < maxWait) {
+        await new Promise(r => setTimeout(r, 100));
+        waited += 100;
+      }
+      return !!window.vibeAgentGo;
     }
 
-    // --- JMAP Helpers ---
+    function extractContent(raw) {
+      if (!raw) return null;
+      if (typeof raw === 'string') return raw;
+      if (raw && typeof raw === 'object' && raw.data !== undefined) return raw.data;
+      return null;
+    }
+
+    async function saveConfig() {
+      if (!window.vibeAgentGo) return;
+      try {
+        await window.vibeAgentGo.writeFile(CONFIG_FILE, JSON.stringify({
+          url: jmapUrl, user: jmapUser, pass: jmapPass
+        }, null, 2));
+      } catch (e) { console.warn('Config save failed', e); }
+    }
+
+    async function loadConfig() {
+      if (!window.vibeAgentGo) return null;
+      try {
+        const raw = await window.vibeAgentGo.readFile(CONFIG_FILE);
+        const content = extractContent(raw);
+        return content ? JSON.parse(content) : null;
+      } catch { return null; }
+    }
+
+    // ============================================================
+    // Toast
+    // ============================================================
+
+    let toastTimer = null;
+    function toast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast active' + (isError ? ' error' : '');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('active'), 3000);
+    }
+
+    // ============================================================
+    // JMAP plumbing
+    // ============================================================
 
     function getAuthHeader() {
       return 'Basic ' + btoa(jmapUser + ':' + jmapPass);
@@ -381,10 +473,14 @@
 
     async function jmapRequest(method, args) {
       const payload = {
-        using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail', 'urn:ietf:params:jmap:calendars', 'urn:ietf:params:jmap:submission'],
+        using: [
+          'urn:ietf:params:jmap:core',
+          'urn:ietf:params:jmap:mail',
+          'urn:ietf:params:jmap:calendars',
+          'urn:ietf:params:jmap:submission'
+        ],
         methodCalls: [[method, args, '0']]
       };
-
       const target = jmapUrl + '/jmap/';
       const fetchFn = window.corsFetch || fetch;
       const res = await fetchFn(target, {
@@ -395,15 +491,11 @@
         },
         body: JSON.stringify(payload)
       });
-
-      if (!res.ok) {
-        throw new Error('HTTP ' + res.status);
-      }
-
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const response = data.methodResponses[0];
       if (response[0] === 'error') {
-        throw new Error(response[1].description || 'JMAP error');
+        throw new Error(response[1].description || response[1].type || 'JMAP error');
       }
       return response[1];
     }
@@ -419,31 +511,148 @@
       return res.json();
     }
 
-    // --- Init ---
+    // ============================================================
+    // Setup / Login
+    // ============================================================
 
-    async function init() {
+    async function saveSetup() {
+      jmapUrl = document.getElementById('setupUrl').value.replace(/\/$/, '');
+      jmapUser = document.getElementById('setupUser').value.trim();
+      jmapPass = document.getElementById('setupPass').value;
+
+      if (!jmapUrl || !jmapUser || !jmapPass) {
+        toast('Bitte alle Felder ausfüllen', true); return;
+      }
+
       try {
         const session = await jmapSession();
         accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
+        if (!accountId) throw new Error('Kein Mail-Account in der JMAP-Session gefunden');
+        await jmapRequest('Mailbox/get', { accountId, ids: null });
+        await saveConfig();
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        init();
+      } catch (err) {
+        toast('Verbindung fehlgeschlagen: ' + err.message, true);
+      }
+    }
 
-        // Find INBOX
-        const mailboxes = await jmapRequest('Mailbox/get', { accountId, ids: null });
-        const inbox = mailboxes.list.find(m => m.role === 'inbox' || m.name.toLowerCase() === 'inbox');
-        inboxId = inbox ? inbox.id : null;
+    function logout() {
+      if (!confirm('Zugangsdaten löschen und abmelden?')) return;
+      if (window.vibeAgentGo) {
+        window.vibeAgentGo.writeFile(CONFIG_FILE, '{}').catch(() => {});
+      }
+      location.reload();
+    }
 
-        // Find identity
-        const identities = await jmapRequest('Identity/get', { accountId, ids: null });
-        identityId = identities.list[0]?.id;
+    async function tryAutoLogin() {
+      const cfg = await loadConfig();
+      if (cfg && cfg.url && cfg.user && cfg.pass) {
+        document.getElementById('setupUrl').value = cfg.url;
+        document.getElementById('setupUser').value = cfg.user;
+        document.getElementById('setupPass').value = cfg.pass;
+        jmapUrl = cfg.url.replace(/\/$/, '');
+        jmapUser = cfg.user;
+        jmapPass = cfg.pass;
+        try {
+          const session = await jmapSession();
+          accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
+          if (!accountId) throw new Error('Kein Mail-Account');
+          document.getElementById('setupScreen').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'flex';
+          init();
+        } catch (e) {
+          console.warn('Auto-login failed, showing setup', e);
+        }
+      }
+    }
+
+    // ============================================================
+    // Init
+    // ============================================================
+
+    async function init() {
+      try {
+        // Mailboxes
+        const mb = await jmapRequest('Mailbox/get', { accountId, ids: null });
+        mailboxes = mb.list || [];
+        renderFolderList();
+
+        // Default to inbox
+        const inbox = mailboxes.find(m => m.role === 'inbox' || m.name.toLowerCase() === 'inbox');
+        currentMailboxId = inbox ? inbox.id : (mailboxes[0] && mailboxes[0].id);
+
+        // Identity
+        try {
+          const identities = await jmapRequest('Identity/get', { accountId, ids: null });
+          identityId = identities.list[0]?.id;
+        } catch (e) { console.warn('Identity/get failed', e); }
+
+        // Calendars
+        try {
+          const cals = await jmapRequest('Calendar/get', { accountId, ids: null });
+          calendars = cals.list || [];
+          defaultCalendarId = calendars[0]?.id || null;
+        } catch (e) { console.warn('Calendar/get failed', e); }
 
         await loadMailList();
       } catch (err) {
         console.error('Init error:', err);
         document.getElementById('mailList').innerHTML =
-          '<div class="empty"><div class="empty-icon">⚠️</div>Fehler: ' + err.message + '</div>';
+          '<div class="empty"><div class="empty-icon">⚠️</div>Fehler: ' + escapeHtml(err.message) + '</div>';
       }
     }
 
-    // --- Mail ---
+    // ============================================================
+    // Mail — folder sidebar
+    // ============================================================
+
+    function folderIcon(m) {
+      switch (m.role) {
+        case 'inbox': return '📬';
+        case 'sent': return '📤';
+        case 'drafts': return '📝';
+        case 'trash': return '🗑️';
+        case 'archive': return '📦';
+        case 'junk': return '🚫';
+        default: return '📁';
+      }
+    }
+
+    function renderFolderList() {
+      const el = document.getElementById('mailSidebar');
+      el.innerHTML = '';
+      // Sort: role folders first in fixed order, then the rest
+      const roleOrder = ['inbox', 'drafts', 'sent', 'archive', 'junk', 'trash'];
+      const sorted = [...mailboxes].sort((a, b) => {
+        const ai = roleOrder.indexOf(a.role), bi = roleOrder.indexOf(b.role);
+        if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+      sorted.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'folder-item' + (m.id === currentMailboxId ? ' active' : '');
+        div.dataset.mailboxId = m.id;
+        const unread = m.unreadEmails || 0;
+        div.innerHTML = `<span>${folderIcon(m)} ${escapeHtml(m.name)}</span>` +
+          (unread > 0 ? `<span class="count unread">${unread}</span>` : `<span class="count">${m.totalEmails || 0}</span>`);
+        div.onclick = () => selectFolder(m.id);
+        el.appendChild(div);
+      });
+    }
+
+    async function selectFolder(id) {
+      currentMailboxId = id;
+      renderFolderList();
+      await loadMailList();
+    }
+
+    // ============================================================
+    // Mail — list
+    // ============================================================
 
     async function loadMailList() {
       const listEl = document.getElementById('mailList');
@@ -452,27 +661,33 @@
       try {
         const query = await jmapRequest('Email/query', {
           accountId,
-          filter: inboxId ? { inMailbox: inboxId } : {},
+          filter: currentMailboxId ? { inMailbox: currentMailboxId } : {},
           sort: [{ property: 'receivedAt', isAscending: false }],
-          limit: 30
+          limit: 50
         });
 
         if (!query.ids || query.ids.length === 0) {
-          listEl.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Keine Mails</div>';
+          currentMails = [];
+          updateUnreadBadge();
+          listEl.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Keine Mails in diesem Ordner</div>';
           return;
         }
 
         const emails = await jmapRequest('Email/get', {
           accountId,
           ids: query.ids,
-          properties: ['id', 'subject', 'from', 'receivedAt', 'preview', 'keywords']
+          properties: ['id', 'subject', 'from', 'receivedAt', 'preview', 'keywords', 'mailboxIds']
         });
 
+        currentMails = emails.list || [];
+        updateUnreadBadge();
+
         listEl.innerHTML = '';
-        emails.list.forEach(mail => {
+        currentMails.forEach(mail => {
           const item = document.createElement('div');
-          item.className = 'mail-item' + (mail.keywords?.$seen ? '' : ' unread');
-          const from = mail.from?.[0]?.email || 'Unbekannt';
+          const isUnread = !mail.keywords?.$seen;
+          item.className = 'mail-item' + (isUnread ? ' unread' : '');
+          const from = mail.from?.[0]?.name || mail.from?.[0]?.email || 'Unbekannt';
           const date = new Date(mail.receivedAt).toLocaleString('de-DE', {
             day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
           });
@@ -485,53 +700,153 @@
           listEl.appendChild(item);
         });
       } catch (err) {
-        listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Fehler: ' + err.message + '</div>';
+        listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Fehler: ' + escapeHtml(err.message) + '</div>';
       }
     }
 
-    async function showMailDetail(id) {
-      const listEl = document.getElementById('mailList');
-      const detailEl = document.getElementById('mailDetail');
+    function updateUnreadBadge() {
+      // Count unread across INBOX only (most useful signal)
+      const inbox = mailboxes.find(m => m.role === 'inbox');
+      const badge = document.getElementById('unreadBadge');
+      const n = inbox?.unreadEmails || 0;
+      if (n > 0) {
+        badge.textContent = n > 99 ? '99+' : String(n);
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
 
+    // ============================================================
+    // Mail — detail
+    // ============================================================
+
+    // Minimal HTML sanitizer — strips scripts/handlers iframes objects.
+    function sanitizeHtml(html) {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      // Remove dangerous elements
+      doc.querySelectorAll('script, iframe, object, embed, link, meta, style, form, input, button').forEach(n => n.remove());
+      // Remove event handlers & javascript: URLs
+      const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT);
+      const toClean = [];
+      while (walker.nextNode()) toClean.push(walker.currentNode);
+      toClean.forEach(el => {
+        [...el.attributes].forEach(attr => {
+          const n = attr.name.toLowerCase();
+          const v = String(attr.value || '').toLowerCase();
+          if (n.startsWith('on')) el.removeAttribute(attr.name);
+          else if ((n === 'href' || n === 'src') && v.trim().startsWith('javascript:')) el.removeAttribute(attr.name);
+          else if (n === 'srcset') el.removeAttribute(attr.name);
+        });
+        if (el.tagName === 'A') {
+          el.setAttribute('target', '_blank');
+          el.setAttribute('rel', 'noopener noreferrer');
+        }
+      });
+      return doc.body.innerHTML;
+    }
+
+    async function showMailDetail(id) {
+      const detailEl = document.getElementById('mailDetail');
       try {
         const res = await jmapRequest('Email/get', {
           accountId,
           ids: [id],
-          properties: ['id', 'subject', 'from', 'to', 'receivedAt', 'textBody', 'bodyValues', 'htmlBody']
+          properties: ['id', 'subject', 'from', 'to', 'cc', 'receivedAt', 'textBody', 'bodyValues', 'htmlBody', 'keywords', 'mailboxIds']
         });
-
         const mail = res.list[0];
         if (!mail) throw new Error('Mail nicht gefunden');
+        currentMail = mail;
 
         document.getElementById('detailSubject').textContent = mail.subject || '(kein Betreff)';
-        document.getElementById('detailFrom').textContent = 'Von: ' + (mail.from?.[0]?.email || '?');
+        const fmt = p => p.name ? `${p.name} <${p.email}>` : p.email;
+        document.getElementById('detailFrom').textContent = 'Von: ' + (mail.from?.map(fmt).join(', ') || '?');
+        document.getElementById('detailTo').textContent = 'An: ' + (mail.to?.map(fmt).join(', ') || '?');
         document.getElementById('detailDate').textContent = new Date(mail.receivedAt).toLocaleString('de-DE');
 
-        // Get body
-        let body = '';
-        if (mail.bodyValues) {
-          const partId = Object.keys(mail.bodyValues)[0];
-          body = mail.bodyValues[partId]?.value || '';
-        }
-        document.getElementById('detailBody').textContent = body;
+        const bodyEl = document.getElementById('detailBody');
+        bodyEl.classList.remove('html');
+        let rendered = false;
 
-        listEl.style.display = 'none';
+        // Prefer HTML body if available
+        if (mail.htmlBody && mail.htmlBody.length > 0 && mail.bodyValues) {
+          const htmlPart = mail.htmlBody.find(p => mail.bodyValues[p.partId]);
+          if (htmlPart) {
+            const html = mail.bodyValues[htmlPart.partId].value || '';
+            bodyEl.innerHTML = sanitizeHtml(html);
+            bodyEl.classList.add('html');
+            rendered = true;
+          }
+        }
+        if (!rendered) {
+          // Fall back to text body
+          let text = '';
+          if (mail.textBody && mail.textBody.length > 0 && mail.bodyValues) {
+            const part = mail.textBody.find(p => mail.bodyValues[p.partId]) || mail.textBody[0];
+            text = mail.bodyValues[part.partId]?.value || '';
+          } else if (mail.bodyValues) {
+            const pid = Object.keys(mail.bodyValues)[0];
+            text = mail.bodyValues[pid]?.value || '';
+          }
+          bodyEl.textContent = text;
+        }
+
         detailEl.classList.add('active');
-        currentView = 'detail';
+
+        // Mark as seen
+        if (!mail.keywords?.$seen) {
+          jmapRequest('Email/set', {
+            accountId,
+            update: { [id]: { 'keywords/$seen': true } }
+          }).then(() => {
+            // Refresh mailbox unread counts
+            return jmapRequest('Mailbox/get', { accountId, ids: null });
+          }).then(mb => {
+            mailboxes = mb.list || mailboxes;
+            renderFolderList();
+            updateUnreadBadge();
+          }).catch(() => {});
+        }
       } catch (err) {
-        alert('Fehler: ' + err.message);
+        toast('Fehler: ' + err.message, true);
       }
     }
 
     function closeMailDetail() {
-      document.getElementById('mailList').style.display = 'block';
       document.getElementById('mailDetail').classList.remove('active');
-      currentView = 'list';
+      currentMail = null;
     }
 
-    // --- Compose ---
+    async function deleteMail() {
+      if (!currentMail) return;
+      if (!confirm('Mail in Papierkorb verschieben?')) return;
+      const trash = mailboxes.find(m => m.role === 'trash');
+      try {
+        if (trash) {
+          await jmapRequest('Email/set', {
+            accountId,
+            update: { [currentMail.id]: { mailboxIds: { [trash.id]: true } } }
+          });
+        } else {
+          await jmapRequest('Email/set', { accountId, destroy: [currentMail.id] });
+        }
+        toast('Mail gelöscht');
+        closeMailDetail();
+        await loadMailList();
+      } catch (e) {
+        toast('Löschen fehlgeschlagen: ' + e.message, true);
+      }
+    }
+
+    // ============================================================
+    // Compose / Reply / Forward / Send
+    // ============================================================
 
     function showCompose() {
+      document.getElementById('composeTitle').textContent = '✏️ Neue Mail';
+      document.getElementById('composeTo').value = '';
+      document.getElementById('composeSubject').value = '';
+      document.getElementById('composeBody').value = '';
       document.getElementById('composePanel').classList.add('active');
     }
 
@@ -539,29 +854,66 @@
       document.getElementById('composePanel').classList.remove('active');
     }
 
+    function replyMail() {
+      if (!currentMail) return;
+      const from = currentMail.from?.[0]?.email || '';
+      document.getElementById('composeTitle').textContent = '↩️ Antworten';
+      document.getElementById('composeTo').value = from;
+      document.getElementById('composeSubject').value = 'Re: ' + (currentMail.subject || '').replace(/^Re:\s*/i, '');
+      // Quote original
+      let orig = '';
+      if (currentMail.bodyValues) {
+        const pid = Object.keys(currentMail.bodyValues)[0];
+        orig = currentMail.bodyValues[pid]?.value || '';
+      }
+      const origFrom = currentMail.from?.[0]?.name || currentMail.from?.[0]?.email || '';
+      const origDate = new Date(currentMail.receivedAt).toLocaleString('de-DE');
+      document.getElementById('composeBody').value =
+        `\n\n--- Am ${origDate} schrieb ${origFrom} ---\n` +
+        orig.split('\n').map(l => '> ' + l).join('\n');
+      document.getElementById('composePanel').classList.add('active');
+    }
+
+    function forwardMail() {
+      if (!currentMail) return;
+      document.getElementById('composeTitle').textContent = '↪️ Weiterleiten';
+      document.getElementById('composeTo').value = '';
+      document.getElementById('composeSubject').value = 'Fwd: ' + (currentMail.subject || '').replace(/^Fwd:\s*/i, '');
+      let orig = '';
+      if (currentMail.bodyValues) {
+        const pid = Object.keys(currentMail.bodyValues)[0];
+        orig = currentMail.bodyValues[pid]?.value || '';
+      }
+      const origFrom = currentMail.from?.[0]?.name || currentMail.from?.[0]?.email || '';
+      const origDate = new Date(currentMail.receivedAt).toLocaleString('de-DE');
+      document.getElementById('composeBody').value =
+        `\n\n--- Weitergeleitete Nachricht ---\nVon: ${origFrom}\nDatum: ${origDate}\nBetreff: ${currentMail.subject || ''}\n\n${orig}`;
+      document.getElementById('composePanel').classList.add('active');
+    }
+
     async function sendMail() {
-      const to = document.getElementById('composeTo').value;
+      const to = document.getElementById('composeTo').value.trim();
       const subject = document.getElementById('composeSubject').value;
       const body = document.getElementById('composeBody').value;
 
       if (!to || !subject) {
-        alert('An und Betreff sind Pflichtfelder');
-        return;
+        toast('An und Betreff sind Pflichtfelder', true); return;
       }
 
       try {
-        // Find Drafts mailbox
-        const mailboxes = await jmapRequest('Mailbox/get', { accountId, ids: null });
-        const drafts = mailboxes.list.find(m => m.role === 'drafts');
+        const drafts = mailboxes.find(m => m.role === 'drafts');
         if (!drafts) throw new Error('Kein Entwürfe-Ordner gefunden');
 
-        // Create draft
+        // Derive From address from identity or fall back to user
+        let fromEmail = jmapUser;
+        if (!fromEmail.includes('@')) fromEmail = jmapUser + '@vibeops.de';
+
         const draft = await jmapRequest('Email/set', {
           accountId,
           create: {
             draft1: {
               mailboxIds: { [drafts.id]: true },
-              from: [{ email: jmapUser + '@vibeops.de' }],
+              from: [{ email: fromEmail }],
               to: [{ email: to }],
               subject,
               bodyValues: { body: { value: body } },
@@ -573,36 +925,62 @@
         const emailId = draft.created?.draft1?.id;
         if (!emailId) throw new Error('Draft konnte nicht erstellt werden');
 
-        // Submit
         await jmapRequest('EmailSubmission/set', {
           accountId,
-          create: {
-            sub1: { identityId, emailId }
-          }
+          create: { sub1: { identityId, emailId } }
         });
 
-        alert('Mail gesendet!');
+        toast('✅ Mail gesendet');
         hideCompose();
-        document.getElementById('composeTo').value = '';
-        document.getElementById('composeSubject').value = '';
-        document.getElementById('composeBody').value = '';
       } catch (err) {
-        alert('Fehler: ' + err.message);
+        toast('Fehler: ' + err.message, true);
       }
     }
 
-    // --- Calendar ---
+    // ============================================================
+    // Calendar — week view with navigation
+    // ============================================================
+
+    function startOfCurrentWeek() {
+      const now = new Date();
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      // ISO weekday: Monday=0 ... Sunday=6
+      const isoDow = (d.getDay() + 6) % 7;
+      d.setDate(d.getDate() - isoDow);
+      return d;
+    }
+
+    function startOfWeek(offset) {
+      const d = startOfCurrentWeek();
+      d.setDate(d.getDate() + offset * 7);
+      return d;
+    }
+
+    function isSameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    // Parse Stalwart's naive datetime (no Z, no offset) as UTC.
+    function parseStalwartDate(s) {
+      if (!s) return null;
+      if (s.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(s)) return new Date(s);
+      return new Date(s + 'Z');
+    }
 
     async function loadCalendar() {
       const weekEl = document.getElementById('calendarWeek');
       weekEl.innerHTML = '';
 
-      const now = new Date();
-      const monday = new Date(now);
-      monday.setDate(now.getDate() - now.getDay() + 1);
-
+      const monday = startOfWeek(weekOffset);
       const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+      const today = new Date();
       const dayDates = [];
+
+      // Title
+      const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+      const fmtDate = d => `${d.getDate()}.${d.getMonth()+1}.`;
+      document.getElementById('calendarTitle').textContent =
+        `${fmtDate(monday)} – ${fmtDate(sunday)} ${sunday.getFullYear()}`;
 
       for (let i = 0; i < 7; i++) {
         const d = new Date(monday);
@@ -610,20 +988,20 @@
         dayDates.push(d);
 
         const dayEl = document.createElement('div');
-        dayEl.className = 'calendar-day';
+        const isToday = isSameDay(d, today);
+        dayEl.className = 'calendar-day' + (isToday ? ' today' : '');
         dayEl.innerHTML = `<div class="calendar-day-header">${days[i]} ${d.getDate()}.${d.getMonth()+1}.</div>`;
         weekEl.appendChild(dayEl);
       }
 
       try {
-        const start = dayDates[0].toISOString().split('T')[0] + 'T00:00:00Z';
-        const end = dayDates[6].toISOString().split('T')[0] + 'T23:59:59Z';
-
+        // Stalwart's after/before filter is unreliable (naive datetime comparison).
+        // Query everything, sort by start, filter client-side.
         const query = await jmapRequest('CalendarEvent/query', {
           accountId,
           filter: {},
           sort: [{ property: 'start', isAscending: true }],
-          limit: 50
+          limit: 200
         });
 
         if (!query.ids || query.ids.length === 0) return;
@@ -633,24 +1011,136 @@
           ids: query.ids
         });
 
-        events.list.forEach(ev => {
-          const startDt = new Date(ev.start);
-          const dayIndex = Math.floor((startDt - dayDates[0]) / (1000 * 60 * 60 * 24));
-          if (dayIndex >= 0 && dayIndex < 7) {
-            const dayEl = weekEl.children[dayIndex];
-            const eventEl = document.createElement('div');
-            eventEl.className = 'calendar-event' + (ev.privacy === 'private' ? ' private' : '');
-            eventEl.textContent = (ev.title || 'Termin').substring(0, 20);
-            eventEl.title = ev.title;
-            dayEl.appendChild(eventEl);
-          }
+        const weekStart = new Date(monday); weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(monday); weekEnd.setDate(monday.getDate() + 7); weekEnd.setHours(0, 0, 0, 0);
+
+        const weekEvents = (events.list || []).filter(ev => {
+          const s = parseStalwartDate(ev.start);
+          return s && s >= weekStart && s < weekEnd;
+        });
+
+        weekEvents.forEach(ev => {
+          const startDt = parseStalwartDate(ev.start);
+          // Compute day index in *local* time so the event lands on the day the user expects
+          const dayIndex = Math.floor((startDt - weekStart) / (1000 * 60 * 60 * 24));
+          if (dayIndex < 0 || dayIndex >= 7) return;
+
+          const dayEl = weekEl.children[dayIndex];
+          const eventEl = document.createElement('div');
+          eventEl.className = 'calendar-event' + (ev.privacy === 'private' ? ' private' : '');
+          const time = startDt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+          eventEl.innerHTML = `<span class="ev-time">${time}</span>${escapeHtml(ev.title || 'Termin')}`;
+          eventEl.title = ev.title || 'Termin';
+          eventEl.onclick = () => showEventDetail(ev);
+          dayEl.appendChild(eventEl);
         });
       } catch (err) {
         console.error('Calendar error:', err);
+        toast('Kalender-Fehler: ' + err.message, true);
       }
     }
 
-    // --- UI ---
+    function prevWeek() { weekOffset--; loadCalendar(); }
+    function nextWeek() { weekOffset++; loadCalendar(); }
+    function goToday() { weekOffset = 0; loadCalendar(); }
+
+    function showEventDetail(ev) {
+      const start = parseStalwartDate(ev.start);
+      document.getElementById('eventTitle').textContent = ev.title || 'Termin';
+      let when = start ? start.toLocaleString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      if (ev.duration) when += ' (' + ev.duration.replace('PT', '').replace('H', ' Std. ').replace('M', ' Min.') + ')';
+      document.getElementById('eventWhen').textContent = when;
+      document.getElementById('eventLocation').textContent = ev.location ? '📍 ' + ev.location : '';
+      document.getElementById('eventDesc').textContent = ev.description || '';
+      document.getElementById('eventModal').classList.add('active');
+    }
+
+    function closeEventModal(e) {
+      if (!e || e.target.id === 'eventModal') {
+        document.getElementById('eventModal').classList.remove('active');
+      }
+    }
+
+    function showNewEvent() {
+      // Pre-fill with today (or monday of visible week)
+      const base = startOfWeek(weekOffset);
+      const d = weekOffset === 0 ? new Date() : base;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      document.getElementById('newEventDate').value = `${yyyy}-${mm}-${dd}`;
+      document.getElementById('newEventTitle').value = '';
+      document.getElementById('newEventLocation').value = '';
+      document.getElementById('newEventDesc').value = '';
+      document.getElementById('newEventModal').classList.add('active');
+    }
+
+    function closeNewEventModal(e) {
+      if (!e || e.target.id === 'newEventModal') {
+        document.getElementById('newEventModal').classList.remove('active');
+      }
+    }
+
+    async function saveNewEvent() {
+      const title = document.getElementById('newEventTitle').value.trim();
+      const dateStr = document.getElementById('newEventDate').value;
+      const startStr = document.getElementById('newEventStart').value;
+      const endStr = document.getElementById('newEventEnd').value;
+      const location = document.getElementById('newEventLocation').value.trim();
+      const desc = document.getElementById('newEventDesc').value.trim();
+
+      if (!title || !dateStr || !startStr || !endStr) {
+        toast('Titel, Datum und Zeiten sind Pflichtfelder', true); return;
+      }
+      if (!defaultCalendarId) {
+        toast('Kein Kalender gefunden', true); return;
+      }
+
+      // Build local start/end, send with offset (Stalwart normalizes to UTC)
+      const startLocal = new Date(`${dateStr}T${startStr}:00`);
+      const endLocal = new Date(`${dateStr}T${endStr}:00`);
+      if (endLocal <= startLocal) {
+        toast('Ende muss nach Start liegen', true); return;
+      }
+      const durationMin = Math.round((endLocal - startLocal) / 60000);
+      const duration = 'PT' + (durationMin >= 60
+        ? Math.floor(durationMin / 60) + 'H' + (durationMin % 60 ? (durationMin % 60) + 'M' : '')
+        : durationMin + 'M');
+
+      // ISO with explicit offset
+      const tzOffset = -startLocal.getTimezoneOffset();
+      const sign = tzOffset >= 0 ? '+' : '-';
+      const oh = String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, '0');
+      const om = String(Math.abs(tzOffset) % 60).padStart(2, '0');
+      const pad = n => String(n).padStart(2, '0');
+      const startIso = `${startLocal.getFullYear()}-${pad(startLocal.getMonth()+1)}-${pad(startLocal.getDate())}T${pad(startLocal.getHours())}:${pad(startLocal.getMinutes())}:00${sign}${oh}:${om}`;
+
+      try {
+        const create = {
+          calendarIds: { [defaultCalendarId]: true },
+          title,
+          start: startIso,
+          duration,
+          timeZone: 'Europe/Berlin'
+        };
+        if (location) create.location = location;
+        if (desc) create.description = desc;
+
+        await jmapRequest('CalendarEvent/set', {
+          accountId,
+          create: { ev1: create }
+        });
+        toast('✅ Termin gespeichert');
+        closeNewEventModal();
+        await loadCalendar();
+      } catch (e) {
+        toast('Fehler: ' + e.message, true);
+      }
+    }
+
+    // ============================================================
+    // UI switching
+    // ============================================================
 
     function switchTab(tab) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -663,40 +1153,34 @@
       if (tab === 'calendar') loadCalendar();
     }
 
-    function refreshAll() {
+    async function refreshAll() {
       if (document.getElementById('mailPanel').classList.contains('active')) {
-        loadMailList();
+        // Refresh mailbox unread counts too
+        try {
+          const mb = await jmapRequest('Mailbox/get', { accountId, ids: null });
+          mailboxes = mb.list || mailboxes;
+          renderFolderList();
+        } catch {}
+        await loadMailList();
       } else {
-        loadCalendar();
+        await loadCalendar();
       }
     }
 
     function escapeHtml(text) {
       const div = document.createElement('div');
-      div.textContent = text;
+      div.textContent = text == null ? '' : String(text);
       return div.innerHTML;
     }
 
-    // --- Bridge Check ---
+    // ============================================================
+    // Boot
+    // ============================================================
 
-    function waitForBridge() {
-      if (window.vibeAgentGo) {
-        // Try to load saved config
-        window.vibeAgentGo.readFile('apps/Productivity/vibeops.vibemail/config.json')
-          .then(res => {
-            if (res?.data) {
-              const cfg = JSON.parse(res.data);
-              document.getElementById('setupUrl').value = cfg.url || 'https://pim.vibeops.de';
-              document.getElementById('setupUser').value = cfg.user || '';
-              document.getElementById('setupPass').value = cfg.pass || '';
-            }
-          })
-          .catch(() => {});
-      } else {
-        setTimeout(waitForBridge, 100);
-      }
-    }
-    waitForBridge();
+    (async () => {
+      await waitForBridge();
+      tryAutoLogin();
+    })();
   </script>
 </body>
 </html>
