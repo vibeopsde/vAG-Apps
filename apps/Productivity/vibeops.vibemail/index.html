@@ -8,7 +8,7 @@
   {
     "id": "vibeops.vibemail",
     "name": "vibeMail",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "author": "vibeops",
     "category": "Productivity",
     "description": "JMAP Mail & Kalender Client für Stalwart",
@@ -451,7 +451,7 @@
   </script>
   <script>
     // ============================================================
-    // vibeMail v0.2.3 — JMAP Client für Stalwart
+    // vibeMail v0.2.4 — JMAP Client für Stalwart
     // ============================================================
 
     const APP_DIR = 'apps/Productivity/vibeops.vibemail';
@@ -477,7 +477,7 @@
     // Bridge helpers (wait, read, write)
     // ============================================================
 
-    async function waitForBridge(maxWait = 5000) {
+    async function waitForBridge(maxWait = 15000) {
       let waited = 0;
       while (!window.vibeAgentGo && waited < maxWait) {
         await new Promise(r => setTimeout(r, 100));
@@ -609,23 +609,40 @@
     }
 
     async function tryAutoLogin() {
+      const bridgeReady = await waitForBridge();
+      if (!bridgeReady) {
+        toast('Bridge nicht verfügbar — App neu starten', true);
+        return;
+      }
+
       const cfg = await loadConfig();
-      if (cfg && cfg.url && cfg.user && cfg.pass) {
-        document.getElementById('setupUrl').value = cfg.url;
-        document.getElementById('setupUser').value = cfg.user;
-        document.getElementById('setupPass').value = cfg.pass;
-        jmapUrl = cfg.url.replace(/\/$/, '');
-        jmapUser = cfg.user;
-        jmapPass = cfg.pass;
-        try {
-          const session = await jmapSession();
-          accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
-          if (!accountId) throw new Error('Kein Mail-Account');
-          document.getElementById('setupScreen').style.display = 'none';
-          document.getElementById('mainApp').style.display = 'flex';
-          init();
-        } catch (e) {
-          console.warn('Auto-login failed, showing setup', e);
+      if (!cfg || !cfg.url || !cfg.user || !cfg.pass) {
+        // No saved config — show setup screen (normal first run)
+        return;
+      }
+
+      // Config found — pre-fill setup form so user doesn't retype
+      document.getElementById('setupUrl').value = cfg.url;
+      document.getElementById('setupUser').value = cfg.user;
+      document.getElementById('setupPass').value = cfg.pass;
+      jmapUrl = cfg.url.replace(/\/$/, '');
+      jmapUser = cfg.user;
+      jmapPass = cfg.pass;
+
+      try {
+        const session = await jmapSession();
+        accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
+        if (!accountId) throw new Error('Kein Mail-Account in der JMAP-Session gefunden');
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        init();
+      } catch (e) {
+        // Login failed — show setup with pre-filled values + error hint
+        console.warn('Auto-login failed:', e);
+        const hint = document.querySelector('.setup-form .hint');
+        if (hint) {
+          hint.textContent = 'Verbindung fehlgeschlagen: ' + e.message + ' — Zugangsdaten sind gespeichert, bitte erneut verbinden.';
+          hint.style.color = '#f85149';
         }
       }
     }
@@ -1500,7 +1517,6 @@
     // ============================================================
 
     (async () => {
-      await waitForBridge();
       tryAutoLogin();
     })();
   </script>
