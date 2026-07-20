@@ -8,7 +8,7 @@
   {
     "id": "vibeops.vibemail",
     "name": "vibeMail",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "author": "vibeops",
     "category": "Productivity",
     "description": "JMAP Mail & Kalender Client für Stalwart",
@@ -451,12 +451,11 @@
   </script>
   <script>
     // ============================================================
-    // vibeMail v0.2.5 — JMAP Client für Stalwart (debug build)
+    // vibeMail v0.2.6 — JMAP Client für Stalwart
     // ============================================================
 
     const APP_DIR = 'apps/Productivity/vibeops.vibemail';
     const CONFIG_FILE = APP_DIR + '/config.json';
-    const DEBUG_LOG = APP_DIR + '/debug.log';
 
     let jmapUrl = '', jmapUser = '', jmapPass = '';
     let accountId = '', identityId = '';
@@ -494,19 +493,6 @@
       return null;
     }
 
-    // Debug logger — writes timestamped lines to workspace debug.log
-    const debugLines = [];
-    function debug(msg) {
-      const ts = new Date().toISOString().split('T')[1].slice(0, -1);
-      const line = `[${ts}] ${msg}`;
-      debugLines.push(line);
-      console.log('[vibeMail debug]', msg);
-      // Flush to workspace async (best-effort)
-      if (window.vibeAgentGo) {
-        window.vibeAgentGo.writeFile(DEBUG_LOG, debugLines.join('\n')).catch(() => {});
-      }
-    }
-
     async function saveConfig() {
       if (!window.vibeAgentGo) return;
       try {
@@ -517,27 +503,12 @@
     }
 
     async function loadConfig() {
-      if (!window.vibeAgentGo) {
-        debug('loadConfig: window.vibeAgentGo NOT available');
-        return null;
-      }
+      if (!window.vibeAgentGo) return null;
       try {
-        debug('loadConfig: reading ' + CONFIG_FILE);
         const raw = await window.vibeAgentGo.readFile(CONFIG_FILE);
-        debug('loadConfig: raw response type=' + typeof raw + ', keys=' + (raw ? Object.keys(raw).join(',') : 'null'));
         const content = extractContent(raw);
-        debug('loadConfig: extracted content type=' + typeof content + ', length=' + (content ? content.length : 0));
-        if (!content) {
-          debug('loadConfig: content is empty/null');
-          return null;
-        }
-        const parsed = JSON.parse(content);
-        debug('loadConfig: parsed OK, url=' + (parsed.url || 'MISSING') + ', user=' + (parsed.user || 'MISSING') + ', pass=' + (parsed.pass ? 'PRESENT(' + parsed.pass.length + ' chars)' : 'MISSING'));
-        return parsed;
-      } catch (e) {
-        debug('loadConfig: ERROR ' + e.message);
-        return null;
-      }
+        return content ? JSON.parse(content) : null;
+      } catch { return null; }
     }
 
     // ============================================================
@@ -638,25 +609,14 @@
     }
 
     async function tryAutoLogin() {
-      debug('=== tryAutoLogin START ===');
-      debug('window.vibeAgentGo=' + (typeof window.vibeAgentGo));
-      debug('window.corsFetch=' + (typeof window.corsFetch));
-
       const bridgeReady = await waitForBridge();
-      debug('waitForBridge returned: ' + bridgeReady);
       if (!bridgeReady) {
-        debug('ERROR: Bridge not ready after 15s — showing toast');
         toast('Bridge nicht verfügbar — App neu starten', true);
         return;
       }
 
-      debug('Calling loadConfig()...');
       const cfg = await loadConfig();
-      debug('loadConfig returned: ' + (cfg ? 'object with keys ' + Object.keys(cfg).join(',') : 'null'));
-
       if (!cfg || !cfg.url || !cfg.user || !cfg.pass) {
-        debug('No valid config found — showing setup screen (first run or incomplete config)');
-        if (cfg) debug('  cfg.url=' + cfg.url + ', cfg.user=' + cfg.user + ', cfg.pass=' + (cfg.pass ? 'present' : 'missing'));
         return;
       }
 
@@ -668,32 +628,21 @@
       jmapUser = cfg.user;
       jmapPass = cfg.pass;
 
-      debug('Config loaded, attempting JMAP session to ' + jmapUrl);
       try {
         const session = await jmapSession();
-        debug('jmapSession OK, primaryAccounts keys=' + Object.keys(session.primaryAccounts || {}).join(','));
         accountId = session.primaryAccounts['urn:ietf:params:jmap:mail'];
-        debug('accountId from mail capability=' + accountId);
-        if (!accountId) {
-          debug('ERROR: No mail account in primaryAccounts');
-          throw new Error('Kein Mail-Account in der JMAP-Session gefunden');
-        }
-        debug('Auto-login SUCCESS — switching to main app');
+        if (!accountId) throw new Error('Kein Mail-Account in der JMAP-Session gefunden');
         document.getElementById('setupScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'flex';
         init();
       } catch (e) {
-        debug('jmapSession FAILED: ' + e.message + ' (name=' + e.name + ')');
-        debug('  jmapUrl=' + jmapUrl + ', jmapUser=' + jmapUser);
-        debug('  typeof corsFetch=' + typeof window.corsFetch);
-        // Login failed — show setup with pre-filled values + error hint
+        console.warn('Auto-login failed:', e);
         const hint = document.querySelector('.setup-form .hint');
         if (hint) {
           hint.textContent = 'Verbindung fehlgeschlagen: ' + e.message + ' — Zugangsdaten sind gespeichert, bitte erneut verbinden.';
           hint.style.color = '#f85149';
         }
       }
-      debug('=== tryAutoLogin END ===');
     }
 
     // ============================================================
@@ -873,7 +822,7 @@
       return DOMPurify.sanitize(html, {
         FORBID_TAGS: ['style', 'form', 'input', 'button', 'meta', 'link'],
         FORBID_ATTR: ['style', 'srcset'],
-        ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+\-]+:/i),
+        ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+\-]+:)/i,
         ADD_ATTR: ['target'],
         SANITIZE_DOM: true
       });
