@@ -8,7 +8,7 @@
   {
     "id": "vibeops.vibemail",
     "name": "vibeMail",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "author": "vibeops",
     "category": "Productivity",
     "description": "JMAP Mail & Kalender Client für Stalwart",
@@ -451,7 +451,7 @@
   </script>
   <script>
     // ============================================================
-    // vibeMail v0.2.6 — JMAP Client für Stalwart
+    // vibeMail v0.2.7 — JMAP Client für Stalwart
     // ============================================================
 
     const APP_DIR = 'apps/Productivity/vibeops.vibemail';
@@ -1361,7 +1361,6 @@
 
         const query = await jmapRequest('ContactCard/query', {
           accountId,
-          sort: [{ property: 'name/given', isAscending: true }],
           limit: 500
         });
 
@@ -1377,7 +1376,7 @@
           ids: query.ids
         });
 
-        allContacts = result.list || [];
+        allContacts = (result.list || []).sort((a, b) => getContactName(a).localeCompare(getContactName(b)));
         contacts = allContacts;
         renderContacts();
       } catch (err) {
