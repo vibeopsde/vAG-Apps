@@ -8,7 +8,7 @@
   {
     "id": "vibeops.vibemail",
     "name": "vibeMail",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "author": "vibeops",
     "category": "Productivity",
     "description": "JMAP Mail & Kalender Client für Stalwart",
@@ -218,6 +218,35 @@
     .toast.error { background: #da3633; }
     .toast.active { display: block; }
 
+    /* Contacts */
+    .contacts-toolbar {
+      display: flex; padding: 10px 14px; background: #161b22;
+      border-bottom: 1px solid #30363d; flex-shrink: 0; gap: 8px;
+    }
+    .contacts-toolbar input {
+      flex: 1; padding: 8px 12px; border: 1px solid #30363d; background: #0d1117;
+      color: #e6edf3; border-radius: 6px; font-size: 14px; font-family: inherit;
+    }
+    .contacts-toolbar input:focus { outline: none; border-color: #58a6ff; }
+    .contacts-list { flex: 1; overflow-y: auto; }
+    .contact-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      border-bottom: 1px solid #21262d; cursor: pointer; transition: background 0.1s;
+    }
+    .contact-item:hover { background: #161b22; }
+    .contact-avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: #21262d;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+      flex-shrink: 0; color: #8b949e;
+    }
+    .contact-info { flex: 1; min-width: 0; }
+    .contact-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+    .contact-email { font-size: 12px; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .contact-detail-block { margin-bottom: 16px; }
+    .contact-detail-block .label { font-size: 12px; color: #8b949e; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .contact-detail-block .value { font-size: 14px; word-wrap: break-word; }
+    .contact-detail-block .value a { color: #58a6ff; text-decoration: none; }
+
     /* Responsive */
     @media (max-width: 720px) {
       .mail-sidebar { width: 140px; }
@@ -274,6 +303,7 @@
           📬 Posteingang<span class="badge" id="unreadBadge" style="display:none">0</span>
         </div>
         <div class="tab" onclick="switchTab('calendar')" data-tab="calendar">📅 Kalender</div>
+        <div class="tab" onclick="switchTab('contacts')" data-tab="contacts">👥 Kontakte</div>
       </div>
       <div class="content">
         <!-- Mail Panel -->
@@ -336,6 +366,15 @@
             <div class="calendar-week" id="calendarWeek"></div>
           </div>
         </div>
+        <!-- Contacts Panel -->
+        <div id="contactsPanel" class="panel">
+          <div class="contacts-toolbar">
+            <input type="text" id="contactSearch" placeholder="🔍 Suchen..." oninput="filterContacts()">
+          </div>
+          <div id="contactsList" class="contacts-list">
+            <div class="loading">Lade Kontakte...</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -389,6 +428,18 @@
       </div>
     </div>
 
+    <!-- Contact Detail Modal -->
+    <div class="modal-overlay" id="contactModal" onclick="closeContactModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3 id="contactName">👤</h3>
+        <div id="contactDetails"></div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeContactModal()">Schließen</button>
+          <button class="btn primary" onclick="mailToContact()">✉️ Mail schreiben</button>
+        </div>
+      </div>
+    </div>
+
     <div class="toast" id="toast"></div>
   </div>
 
@@ -400,7 +451,7 @@
   </script>
   <script>
     // ============================================================
-    // vibeMail v0.2.2 — JMAP Client für Stalwart
+    // vibeMail v0.2.3 — JMAP Client für Stalwart
     // ============================================================
 
     const APP_DIR = 'apps/Productivity/vibeops.vibemail';
@@ -414,6 +465,10 @@
     let currentMail = null;       // opened mail (full)
     let calendars = [];
     let defaultCalendarId = null;
+    let addressBooks = [];
+    let defaultAddressBookId = null;
+    let contacts = [];
+    let allContacts = [];
 
     // Calendar state: weekOffset = 0 means current week
     let weekOffset = 0;
@@ -483,7 +538,8 @@
           'urn:ietf:params:jmap:core',
           'urn:ietf:params:jmap:mail',
           'urn:ietf:params:jmap:calendars',
-          'urn:ietf:params:jmap:submission'
+          'urn:ietf:params:jmap:submission',
+          'urn:ietf:params:jmap:contacts'
         ],
         methodCalls: [[method, args, '0']]
       };
@@ -648,6 +704,19 @@
         div.onclick = () => selectFolder(m.id);
         el.appendChild(div);
       });
+
+      // "Papierkorb leeren" button when viewing trash
+      const trash = mailboxes.find(m => m.role === 'trash');
+      if (trash && currentMailboxId === trash.id) {
+        const btn = document.createElement('div');
+        btn.className = 'folder-item';
+        btn.style.color = '#f85149';
+        btn.style.borderTop = '1px solid #30363d';
+        btn.style.marginTop = '8px';
+        btn.innerHTML = '<span>🗑️ Ordner leeren</span>';
+        btn.onclick = () => emptyFolder();
+        el.appendChild(btn);
+      }
     }
 
     async function selectFolder(id) {
@@ -817,16 +886,18 @@
 
     async function deleteMail() {
       if (!currentMail) return;
-      if (!confirm('Mail in Papierkorb verschieben?')) return;
       const trash = mailboxes.find(m => m.role === 'trash');
+      const inTrash = trash && currentMailboxId === trash.id;
+      const msg = inTrash ? 'Mail endgültig löschen?' : 'Mail in Papierkorb verschieben?';
+      if (!confirm(msg)) return;
       try {
-        if (trash) {
+        if (inTrash || !trash) {
+          await jmapRequest('Email/set', { accountId, destroy: [currentMail.id] });
+        } else {
           await jmapRequest('Email/set', {
             accountId,
             update: { [currentMail.id]: { mailboxIds: { [trash.id]: true } } }
           });
-        } else {
-          await jmapRequest('Email/set', { accountId, destroy: [currentMail.id] });
         }
         toast('Mail gelöscht');
         closeMailDetail();
@@ -840,6 +911,33 @@
         await loadMailList();
       } catch (e) {
         toast('Löschen fehlgeschlagen: ' + e.message, true);
+      }
+    }
+
+    // Empty current folder (e.g. trash) — permanently destroy all mails
+    async function emptyFolder() {
+      const folder = mailboxes.find(m => m.id === currentMailboxId);
+      if (!folder) return;
+      if (!confirm(`Alle Mails in "${folder.name}" endgültig löschen?`)) return;
+      try {
+        const query = await jmapRequest('Email/query', {
+          accountId,
+          filter: { inMailbox: currentMailboxId },
+          limit: 500
+        });
+        if (!query.ids || query.ids.length === 0) {
+          toast('Ordner ist bereits leer');
+          return;
+        }
+        await jmapRequest('Email/set', { accountId, destroy: query.ids });
+        toast(`✅ ${query.ids.length} Mail(s) gelöscht`);
+        const mb = await jmapRequest('Mailbox/get', { accountId, ids: null });
+        mailboxes = mb.list || mailboxes;
+        renderFolderList();
+        updateUnreadBadge();
+        await loadMailList();
+      } catch (e) {
+        toast('Leeren fehlgeschlagen: ' + e.message, true);
       }
     }
 
@@ -1192,6 +1290,174 @@
     }
 
     // ============================================================
+    // Contacts
+    // ============================================================
+
+    function getContactName(card) {
+      if (card.name) {
+        if (card.name.full) return card.name.full;
+        if (card.name.components) {
+          const parts = card.name.components
+            .filter(c => c.kind === 'given' || c.kind === 'surname')
+            .map(c => c.value);
+          if (parts.length > 0) return parts.join(' ');
+        }
+      }
+      if (card.emails) {
+        const firstEmail = Object.values(card.emails)[0];
+        if (firstEmail?.address) return firstEmail.address;
+      }
+      if (card.uid) return card.uid;
+      return 'Unbekannt';
+    }
+
+    function getContactEmails(card) {
+      if (!card.emails) return [];
+      return Object.values(card.emails).map(e => e.address).filter(Boolean);
+    }
+
+    function getContactPhones(card) {
+      if (!card.phones) return [];
+      return Object.values(card.phones).map(p => p.number).filter(Boolean);
+    }
+
+    function getContactOrg(card) {
+      if (!card.organizations) return '';
+      const org = Object.values(card.organizations)[0];
+      return org?.name || '';
+    }
+
+    function contactInitials(name) {
+      const parts = name.split(' ').filter(Boolean);
+      if (parts.length === 0) return '?';
+      if (parts.length === 1) return parts[0][0].toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    async function loadContacts() {
+      const listEl = document.getElementById('contactsList');
+      listEl.innerHTML = '<div class="loading">Lade Kontakte...</div>';
+      document.getElementById('contactSearch').value = '';
+
+      try {
+        const books = await jmapRequest('AddressBook/get', { accountId, ids: null });
+        addressBooks = books.list || [];
+        defaultAddressBookId = addressBooks.find(b => b.isDefault)?.id || addressBooks[0]?.id || null;
+
+        const query = await jmapRequest('ContactCard/query', {
+          accountId,
+          sort: [{ property: 'name/given', isAscending: true }],
+          limit: 500
+        });
+
+        if (!query.ids || query.ids.length === 0) {
+          allContacts = [];
+          contacts = [];
+          listEl.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Keine Kontakte gefunden</div>';
+          return;
+        }
+
+        const result = await jmapRequest('ContactCard/get', {
+          accountId,
+          ids: query.ids
+        });
+
+        allContacts = result.list || [];
+        contacts = allContacts;
+        renderContacts();
+      } catch (err) {
+        console.error('Contacts error:', err);
+        listEl.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Fehler: ' + escapeHtml(err.message) + '</div>';
+      }
+    }
+
+    function renderContacts() {
+      const listEl = document.getElementById('contactsList');
+      if (contacts.length === 0) {
+        listEl.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Keine Kontakte gefunden</div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      contacts.forEach(card => {
+        const name = getContactName(card);
+        const emails = getContactEmails(card);
+        const item = document.createElement('div');
+        item.className = 'contact-item';
+        item.innerHTML = `
+          <div class="contact-avatar">${contactInitials(name)}</div>
+          <div class="contact-info">
+            <div class="contact-name">${escapeHtml(name)}</div>
+            <div class="contact-email">${escapeHtml(emails[0] || '')}</div>
+          </div>
+        `;
+        item.onclick = () => showContactDetail(card);
+        listEl.appendChild(item);
+      });
+    }
+
+    function filterContacts() {
+      const q = document.getElementById('contactSearch').value.toLowerCase().trim();
+      if (!q) {
+        contacts = allContacts;
+      } else {
+        contacts = allContacts.filter(c => {
+          const name = getContactName(c).toLowerCase();
+          const emails = getContactEmails(c).join(' ').toLowerCase();
+          const org = getContactOrg(c).toLowerCase();
+          return name.includes(q) || emails.includes(q) || org.includes(q);
+        });
+      }
+      renderContacts();
+    }
+
+    function showContactDetail(card) {
+      const name = getContactName(card);
+      document.getElementById('contactName').textContent = name;
+      const emails = getContactEmails(card);
+      const phones = getContactPhones(card);
+      const org = getContactOrg(card);
+
+      let html = '';
+      if (org) {
+        html += `<div class="contact-detail-block"><div class="label">Organisation</div><div class="value">${escapeHtml(org)}</div></div>`;
+      }
+      if (emails.length > 0) {
+        html += '<div class="contact-detail-block"><div class="label">E-Mail</div>';
+        emails.forEach(e => {
+          html += `<div class="value"><a href="mailto:${escapeHtml(e)}">${escapeHtml(e)}</a></div>`;
+        });
+        html += '</div>';
+      }
+      if (phones.length > 0) {
+        html += '<div class="contact-detail-block"><div class="label">Telefon</div>';
+        phones.forEach(p => {
+          html += `<div class="value">${escapeHtml(p)}</div>`;
+        });
+        html += '</div>';
+      }
+      if (!html) html = '<div class="contact-detail-block"><div class="value">Keine weiteren Details</div></div>';
+
+      document.getElementById('contactDetails').innerHTML = html;
+      document.getElementById('contactDetails').dataset.contactEmail = emails[0] || '';
+      document.getElementById('contactModal').classList.add('active');
+    }
+
+    function closeContactModal(e) {
+      if (!e || e.target.id === 'contactModal') {
+        document.getElementById('contactModal').classList.remove('active');
+      }
+    }
+
+    function mailToContact() {
+      const email = document.getElementById('contactDetails').dataset.contactEmail;
+      if (!email) { toast('Keine E-Mail-Adresse', true); return; }
+      closeContactModal();
+      switchTab('mail');
+      showCompose();
+      document.getElementById('composeTo').value = email;
+    }
+
+    // ============================================================
     // UI switching
     // ============================================================
 
@@ -1201,22 +1467,25 @@
 
       document.getElementById('mailPanel').classList.remove('active');
       document.getElementById('calendarPanel').classList.remove('active');
+      document.getElementById('contactsPanel').classList.remove('active');
       document.getElementById(tab + 'Panel').classList.add('active');
 
       if (tab === 'calendar') loadCalendar();
+      if (tab === 'contacts') loadContacts();
     }
 
     async function refreshAll() {
       if (document.getElementById('mailPanel').classList.contains('active')) {
-        // Refresh mailbox unread counts too
         try {
           const mb = await jmapRequest('Mailbox/get', { accountId, ids: null });
           mailboxes = mb.list || mailboxes;
           renderFolderList();
         } catch {}
         await loadMailList();
-      } else {
+      } else if (document.getElementById('calendarPanel').classList.contains('active')) {
         await loadCalendar();
+      } else if (document.getElementById('contactsPanel').classList.contains('active')) {
+        await loadContacts();
       }
     }
 
