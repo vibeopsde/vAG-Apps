@@ -35,7 +35,7 @@
 {
   "id": "vibeops.games.2048",
   "name": "2048",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "vibeops",
   "category": "Games",
   "description": "Das klassische 2048-Puzzle – Kacheln zusammenführen und die 2048 erreichen!",
@@ -188,21 +188,24 @@ html, body {
 .t128  { background: #edcf72; color: #f9f6f2; box-shadow: 0 0 12px rgba(243,215,116,.6); }
 .t256  { background: #edcc61; color: #f9f6f2; box-shadow: 0 0 14px rgba(243,215,116,.7); }
 .t512  { background: #edc850; color: #f9f6f2; box-shadow: 0 0 16px rgba(243,215,116,.8); }
-.t1024 { background: #edc53f; color: #f9f6f2; box-shadow: 0 0 18px rgba(243,215,116,.9); }
-.t2048 { background: #edc22e; color: #f9f6f2; box-shadow: 0 0 20px rgba(243,215,116,1); }
-.t-super { background: #3c3a32; color: #f9f6f2; }
+.t1024 { background: #edb142; color: #f9f6f2; box-shadow: 0 0 18px rgba(237,177,66,.9); }
+.t2048 { background: #ed8f1e; color: #f9f6f2; box-shadow: 0 0 22px rgba(237,143,30,1); }
+.t4096 { background: #a020f0; color: #f9f6f2; box-shadow: 0 0 18px rgba(160,32,240,.7); }
+.t8192 { background: #6a0dad; color: #f9f6f2; box-shadow: 0 0 20px rgba(106,13,173,.8); }
+.t16384 { background: #00ced1; color: #f9f6f2; box-shadow: 0 0 22px rgba(0,206,209,.9); }
+.t-super { background: #006400; color: #f9f6f2; box-shadow: 0 0 24px rgba(0,100,0,1); }
 
 .tile { font-size: 32px; }
 .tile.t128, .tile.t256, .tile.t512 { font-size: 28px; }
 .tile.t1024, .tile.t2048 { font-size: 24px; }
-.tile.t-super { font-size: 22px; }
+.tile.t4096, .tile.t8192, .tile.t16384, .tile.t-super { font-size: 22px; }
 
 @media (max-width: 420px) {
   .title { font-size: 38px; }
   .tile { font-size: 26px; }
   .tile.t128, .tile.t256, .tile.t512 { font-size: 22px; }
   .tile.t1024, .tile.t2048 { font-size: 18px; }
-  .tile.t-super { font-size: 16px; }
+  .tile.t4096, .tile.t8192, .tile.t16384, .tile.t-super { font-size: 16px; }
 }
 
 .overlay {
@@ -305,24 +308,33 @@ html, body {
     return null;
   }
 
+  var bridgeRetries = 0;
+  var MAX_BRIDGE_RETRIES = 50;
+
   function loadBest() {
-    if (window.vibeAgentGo && window.vibeAgentGo.readFile) {
-      window.vibeAgentGo.readFile(SCORE_FILE).then(function(res) {
-        try {
-          var content = extractContent(res);
-          if (!content || typeof content !== 'string') return;
-          var data = JSON.parse(content);
-          best = data.best || 0;
-          bestEl.textContent = best;
-        } catch(e) {}
-      }).catch(function(){});
+    if (!window.vibeAgentGo || !window.vibeAgentGo.readFile) {
+      // Bridge not ready yet — retry shortly (known iframe timing pitfall)
+      if (bridgeRetries++ < MAX_BRIDGE_RETRIES) setTimeout(loadBest, 200);
+      return;
     }
+    window.vibeAgentGo.readFile(SCORE_FILE).then(function(res) {
+      try {
+        var content = extractContent(res);
+        if (!content || typeof content !== 'string') return;
+        var data = JSON.parse(content);
+        best = data.best || 0;
+        bestEl.textContent = best;
+      } catch(e) {}
+    }).catch(function(){});
   }
 
   function saveBest() {
-    if (window.vibeAgentGo && window.vibeAgentGo.writeFile) {
-      window.vibeAgentGo.writeFile(SCORE_FILE, JSON.stringify({ best: best }));
+    if (!window.vibeAgentGo || !window.vibeAgentGo.writeFile) {
+      // Bridge not ready — retry once it's available
+      if (bridgeRetries < MAX_BRIDGE_RETRIES) setTimeout(saveBest, 200);
+      return;
     }
+    window.vibeAgentGo.writeFile(SCORE_FILE, JSON.stringify({ best: best }));
   }
 
   function newGame() {
@@ -475,7 +487,7 @@ html, body {
   }
 
   function tileClass(val) {
-    if (val <= 2048) return 't' + val;
+    if (val <= 16384) return 't' + val;
     return 't-super';
   }
 

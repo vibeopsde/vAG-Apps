@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-07-20T09:01:12.474Z",
+  "generatedAt": "2026-07-29T19:37:43.210Z",
   "count": 10,
   "apps": [
     {
       "id": "vibeops.games.2048",
       "name": "2048",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "vibeops",
       "category": "Games",
       "description": "Das klassische 2048-Puzzle – Kacheln zusammenführen und die 2048 erreichen!",
