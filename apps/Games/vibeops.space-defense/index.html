@@ -725,7 +725,7 @@ function drawStars() {
 }
 
 function drawPath() {
-  if (!currentSector) return;
+  if (!currentSector || !pathPx || pathPx.length === 0) return;
   ctx.strokeStyle = currentSector.pathColor;
   ctx.lineWidth = GRID;
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -874,6 +874,7 @@ function render() {
   ctx.fillStyle = currentSector ? currentSector.colorBg : '#050810';
   ctx.fillRect(0, 0, SIZE, SIZE);
   drawStars();
+  if (!state) return; // guard: state not initialised yet (menu/story screen)
   drawPath();
   drawPlacement();
   drawTowers();
@@ -885,7 +886,7 @@ function render() {
 // GAME LOOP
 // ============================================================
 function update(dt) {
-  if (state.gameOver) return;
+  if (!state || state.gameOver) return;
   var now = performance.now();
   var scaledDt = dt * state.speed;
 
