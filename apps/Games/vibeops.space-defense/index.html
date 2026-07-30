@@ -35,10 +35,10 @@
 {
   "id": "vibeops.space-defense",
   "name": "Space Defense",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "author": "vibeops",
   "category": "Games",
-  "description": "Piratenpfad — Verteidige den Vela-Sektor als Piratenflotte gegen einfallende Konzerne und Militärs. Drei Sektoren, eine Ressource: Schrott.",
+  "description": "Piratenpfad — Verteidige den Vela-Sektor. Transporter aufhalten, Begleitschiffe ausschalten, Türme schützen. Drei Sektoren, eine Ressource: Schrott.",
   "icon": "🚀",
   "permissions": ["readFile", "writeFile"],
   "minVibeAgentGo": "2607.9.4",
@@ -211,6 +211,7 @@ canvas { display: block; width: 100%; height: auto; background: #050810; border:
   <div id="play-screen">
     <div id="hud">
       <span>🔩 <span class="val" id="money">150</span></span>
+      <span>🏗️ <span class="val" id="tower-count">0</span></span>
       <span>🛡️ <span class="hud-lives" id="lives">20</span></span>
       <span>🌊 <span class="hud-wave" id="wave">0</span></span>
       <span>🏆 <span class="val" id="score">0</span></span>
@@ -224,7 +225,7 @@ canvas { display: block; width: 100%; height: auto; background: #050810; border:
         <button id="ov-btn">↻ Nochmal</button>
       </div>
     </div>
-    <div id="info-bar">Turm wählen → auf Spielfeld platzieren. Auf Turm klicken = Upgrade.</div>
+    <div id="info-bar">Turm wählen → auf Spielfeld platzieren. Auf Turm klicken: beschädigt = Reparatur (30🔩/40HP), voll = Upgrade.</div>
     <div id="controls">
       <div class="tower-btn" data-tower="laser">
         <span class="icon">🔴</span><span>Pulskanone</span><span class="cost">60🔩</span>
@@ -275,7 +276,7 @@ const SECTORS = [
       {x:0,y:2},{x:5,y:2},{x:5,y:7},{x:12,y:7},{x:12,y:2},{x:17,y:2},
       {x:17,y:12},{x:7,y:12},{x:7,y:17},{x:17,y:17},{x:17,y:19},{x:20,y:19}
     ],
-    enemyTypes: ['scout','fighter'],
+    enemyTypes: ['jaeger','transporter'],
     spawnRate: 800,
     speedScale: 1.0
   },
@@ -295,7 +296,7 @@ const SECTORS = [
       {x:17,y:4},{x:17,y:12},{x:11,y:12},{x:11,y:17},{x:17,y:17},
       {x:17,y:19},{x:20,y:19}
     ],
-    enemyTypes: ['scout','fighter','cruiser'],
+    enemyTypes: ['jaeger','bomber','transporter','fregatte'],
     spawnRate: 650,
     speedScale: 1.15
   },
@@ -317,7 +318,7 @@ const SECTORS = [
       {x:8,y:11},{x:8,y:15},{x:4,y:15},{x:4,y:11},{x:1,y:11},
       {x:1,y:19},{x:20,y:19}
     ],
-    enemyTypes: ['scout','fighter','cruiser','mothership'],
+    enemyTypes: ['jaeger','bomber','transporter','fregatte','flottenverband'],
     spawnRate: 550,
     speedScale: 1.3
   }
@@ -333,13 +334,24 @@ const TOWER_TYPES = {
 };
 
 // ============================================================
-// ENEMY TYPES — the invaders
+// ENEMY TYPES — the invaders (Transporter + Begleitschiffe)
 // ============================================================
 const ENEMY_TYPES = {
-  scout:      { name:'Konzern-Scout', hp: 45,  speed: 1.4,  reward: 8,  color: '#3498db', size: 8,  icon: '🛸' },
-  fighter:    { name:'Jäger',         hp: 28,  speed: 2.6,  reward: 12, color: '#e74c3c', size: 7,  icon: '🚀' },
-  cruiser:    { name:'Fregatte',      hp: 200, speed: 0.7,  reward: 28, color: '#95a5a6', size: 11, icon: '🛰️' },
-  mothership: { name:'Flottenverband',hp: 600, speed: 0.45, reward: 100,color: '#9b59b6', size: 15, icon: '👾' }
+  // --- Transporter (cargo ships, NO counterattack) ---
+  transporter:  { name:'Transporter',      hp: 80,  speed: 0.6,  reward: 25, color: '#3498db', size: 11, icon: '🚢',
+                  isTransport: true, canShoot: false, lifeCost: 2 },
+  fregatte:     { name:'Fregatte',         hp: 150, speed: 1.0,  reward: 18, color: '#1abc9c', size: 10, icon: '🛰️',
+                  isTransport: true, canShoot: false, lifeCost: 2 },
+  // --- Begleitschiffe (escort fighters, shoot at towers) ---
+  jaeger:       { name:'Jäger',            hp: 25,  speed: 2.6,  reward: 10, color: '#e74c3c', size: 7,  icon: '🚀',
+                  isTransport: false, canShoot: true, lifeCost: 1,
+                  fireRate: 2000, damage: 8,  projSpeed: 4, salvo: 1, range: 80 },
+  bomber:       { name:'Bomber',           hp: 60,  speed: 1.4,  reward: 15, color: '#e67e22', size: 9,  icon: '⚔️',
+                  isTransport: false, canShoot: true, lifeCost: 1,
+                  fireRate: 2500, damage: 15, projSpeed: 3, salvo: 1, range: 80 },
+  flottenverband:{ name:'Flottenverband',  hp: 500, speed: 0.45, reward: 90, color: '#9b59b6', size: 15, icon: '👾',
+                  isTransport: false, canShoot: true, lifeCost: 5,
+                  fireRate: 1500, damage: 25, projSpeed: 5, salvo: 3, range: 80 }
 };
 
 // ============================================================
@@ -462,6 +474,8 @@ var SOUNDS = {
   waveStart: function() { playTone(440,0.1,'sine',0.12); setTimeout(function(){playTone(554,0.1,'sine',0.12);},80); setTimeout(function(){playTone(659,0.15,'sine',0.14);},160); },
   waveClear: function() { playTone(523,0.08,'sine',0.1); setTimeout(function(){playTone(659,0.08,'sine',0.1);},60); setTimeout(function(){playTone(784,0.08,'sine',0.1);},120); setTimeout(function(){playTone(1047,0.15,'sine',0.12);},180); },
   hit: function() { playTone(150, 0.04, 'square', 0.04, 80); },
+  towerHit: function() { playTone(200, 0.06, 'sawtooth', 0.06, 100); },
+  towerDestroy: function() { playNoise(0.2, 0.1, 400); playTone(120, 0.15, 'sawtooth', 0.08, 40); },
   gameOver: function() { playTone(440,0.2,'sawtooth',0.15,220); setTimeout(function(){playTone(330,0.2,'sawtooth',0.15,165);},150); setTimeout(function(){playTone(220,0.4,'sawtooth',0.15,110);},300); },
   leak: function() { playTone(100, 0.15, 'square', 0.08, 50); },
   menuClick: function() { playTone(880, 0.04, 'square', 0.08); },
@@ -520,10 +534,11 @@ function setupSectorPath(sector) {
 function resetGame() {
   state = {
     money: 150, lives: 20, wave: 0, score: 0,
-    towers: [], enemies: [], projectiles: [],
+    towers: [], enemies: [], projectiles: [], enemyProjectiles: [],
     selectedTower: null, hoverX: -1, hoverY: -1,
     waveActive: false, gameOver: false, speed: 1,
-    enemiesToSpawn: [], spawnTimer: 0
+    enemiesToSpawn: [], spawnTimer: 0,
+    hudFlashUntil: 0
   };
   document.querySelectorAll('.tower-btn').forEach(function(b) { b.classList.remove('selected'); });
   var btn = document.getElementById('start-btn');
@@ -539,20 +554,24 @@ function resetGame() {
 // ENEMIES
 // ============================================================
 function createEnemy(type) {
-  var t = ENEMY_TYPES[type] || ENEMY_TYPES.scout;
+  var t = ENEMY_TYPES[type] || ENEMY_TYPES.jaeger;
   var hpScale = 1 + state.wave * 0.18 * currentSector.speedScale;
   return {
     x: pathPx[0].x, y: pathPx[0].y,
     pathIdx: 0, hp: t.hp * hpScale, maxHp: t.hp * hpScale,
     speed: t.speed * currentSector.speedScale, baseSpeed: t.speed * currentSector.speedScale,
     reward: t.reward, color: t.color, size: t.size, type: type,
+    isTransport: !!t.isTransport, canShoot: !!t.canShoot, lifeCost: t.lifeCost || 1,
+    fireRate: t.fireRate || 0, damage: t.damage || 0, projSpeed: t.projSpeed || 0,
+    salvo: t.salvo || 0, fireRange: t.range || 0,
+    lastFired: 0,
     slowUntil: 0, alive: true, angle: 0
   };
 }
 
 function moveEnemy(e, dt) {
   if (e.pathIdx >= pathPx.length - 1) {
-    state.lives -= e.type === 'mothership' ? 5 : 1;
+    state.lives -= e.lifeCost || 1;
     e.alive = false;
     SOUNDS.leak();
     return;
@@ -589,9 +608,11 @@ function placeTower(gx, gy) {
   if (state.money < def.cost) return;
   state.money -= def.cost;
   SOUNDS.place();
+  var maxHp = 100 + (state.wave) * 30;
   state.towers.push({
     gx: gx, gy: gy, x: gx*GRID + GRID/2, y: gy*GRID + GRID/2,
-    type: type, def: def, level: 1, lastFired: 0, angle: 0
+    type: type, def: def, level: 1, lastFired: 0, angle: 0,
+    hp: maxHp, maxHp: maxHp, hitFlashUntil: 0
   });
   updateHUD();
 }
@@ -601,8 +622,22 @@ function upgradeTower(tower) {
   if (state.money < cost) return;
   state.money -= cost;
   tower.level++;
+  // Upgrade also restores full HP and increases max HP
+  tower.maxHp = 100 + (state.wave) * 30 + (tower.level - 1) * 30;
+  tower.hp = tower.maxHp;
   SOUNDS.upgrade();
   updateHUD();
+}
+
+function repairTower(tower) {
+  if (tower.hp >= tower.maxHp) return false;
+  var repairCost = 30;
+  if (state.money < repairCost) return false;
+  state.money -= repairCost;
+  tower.hp = Math.min(tower.maxHp, tower.hp + 40);
+  SOUNDS.place();
+  updateHUD();
+  return true;
 }
 
 function towerFire(tower, now) {
@@ -667,32 +702,159 @@ function updateProjectile(p, dt) {
 }
 
 // ============================================================
+// ENEMY FIRE (escort ships shoot at towers)
+// ============================================================
+function enemyFire(e, now) {
+  if (!e.canShoot || !e.alive) return;
+  if (now - e.lastFired < e.fireRate / state.speed) return;
+  // Find closest tower in range
+  var target = null, bestDist = e.fireRange;
+  for (var i = 0; i < state.towers.length; i++) {
+    var tw = state.towers[i];
+    var dx = tw.x - e.x, dy = tw.y - e.y;
+    var d = Math.sqrt(dx*dx + dy*dy);
+    if (d <= bestDist) {
+      bestDist = d;
+      target = tw;
+    }
+  }
+  if (!target) return; // no tower in range — keep moving
+  e.lastFired = now;
+  // Fire salvo
+  for (var s = 0; s < e.salvo; s++) {
+    state.enemyProjectiles.push({
+      x: e.x, y: e.y, target: target,
+      speed: e.projSpeed, damage: e.damage,
+      alive: true, delay: s * 150, born: now + s * 150
+    });
+  }
+}
+
+function updateEnemyProjectile(p, dt, now) {
+  if (!p.alive) return;
+  if (now < p.born) return; // salvo delay
+  // Target may have been destroyed — re-target closest tower or continue to last position
+  var tx, ty;
+  if (p.target && state.towers.indexOf(p.target) !== -1) {
+    tx = p.target.x; ty = p.target.y;
+  } else {
+    // Target gone — check if we still have coordinates
+    tx = p.tx; ty = p.ty;
+    if (tx === undefined) { p.alive = false; return; }
+  }
+  // Store last known position for when target is destroyed mid-flight
+  p.tx = tx; p.ty = ty;
+  var dx = tx - p.x, dy = ty - p.y;
+  var dist = Math.sqrt(dx*dx + dy*dy);
+  var move = p.speed * dt * 0.06;
+  if (dist < move + 8) {
+    // Hit tower
+    if (p.target && state.towers.indexOf(p.target) !== -1) {
+      p.target.hp -= p.damage;
+      p.target.hitFlashUntil = now + 200;
+      SOUNDS.towerHit();
+      if (p.target.hp <= 0) {
+        // Tower destroyed
+        state.towers = state.towers.filter(function(t) { return t !== p.target; });
+        state.hudFlashUntil = now + 600;
+        SOUNDS.towerDestroy();
+      }
+    }
+    p.alive = false;
+  } else {
+    p.x += (dx/dist) * move;
+    p.y += (dy/dist) * move;
+  }
+}
+
+// ============================================================
 // WAVE GENERATION (per sector)
 // ============================================================
 function generateWave(n) {
   var enemies = [];
   var sector = currentSector;
-  var count = 5 + n * 3;
-  var pool = sector.enemyTypes;
-  for (var i = 0; i < count; i++) {
-    var type = 'scout';
-    var r = Math.random();
-    // Sector-specific wave composition
-    if (sector.id === 1) {
-      if (n >= 2 && r < 0.35) type = 'fighter';
-    } else if (sector.id === 2) {
-      if (n >= 2 && r < 0.35) type = 'fighter';
-      if (n >= 4 && r < 0.18) type = 'cruiser';
-    } else if (sector.id === 3) {
-      if (n >= 2 && r < 0.35) type = 'fighter';
-      if (n >= 3 && r < 0.20) type = 'cruiser';
-      if (n >= 5 && r < 0.08) type = 'mothership';
+  var sid = sector.id;
+  var isBoss = (n % 5 === 0);
+  var isLateWave = (n >= Math.floor(sector.waves * 0.6));
+
+  // --- Sector 1: Jäger + Transporter (no Bomber, no Flottenverband) ---
+  if (sid === 1) {
+    // Early waves: mostly Jäger
+    var jaegerCount = 4 + n * 2;
+    for (var j1 = 0; j1 < jaegerCount; j1++) enemies.push('jaeger');
+    // Mid waves: a few transporters
+    if (n >= 3) {
+      var tCount = Math.min(3, Math.floor(n / 2));
+      for (var t1 = 0; t1 < tCount; t1++) enemies.push('transporter');
     }
-    enemies.push(type);
+    // Later waves: transporter groups
+    if (isLateWave) {
+      var lt = 2 + Math.floor((n - 3) / 2);
+      for (var lt1 = 0; lt1 < lt; lt1++) enemies.push('transporter');
+    }
   }
-  // Boss every 5 waves
-  if (n % 5 === 0 && sector.id >= 3) enemies.push('mothership');
-  else if (n % 4 === 0 && sector.id >= 2) enemies.push('cruiser');
+  // --- Sector 2: Jäger + Bomber + Transporter + Fregatte ---
+  else if (sid === 2) {
+    var j2Count = 3 + n * 2;
+    for (var j2 = 0; j2 < j2Count; j2++) enemies.push('jaeger');
+    // Bombers appear from wave 2+
+    if (n >= 2) {
+      var b2Count = Math.min(4, Math.floor(n / 2));
+      for (var b2 = 0; b2 < b2Count; b2++) enemies.push('bomber');
+    }
+    // Transporters from wave 3+
+    if (n >= 3) {
+      var t2Count = Math.min(3, Math.floor(n / 2));
+      for (var t2 = 0; t2 < t2Count; t2++) enemies.push('transporter');
+    }
+    // Fregatten from wave 4+
+    if (n >= 4) {
+      var f2Count = Math.min(2, Math.floor((n - 2) / 3));
+      for (var f2 = 0; f2 < f2Count; f2++) enemies.push('fregatte');
+    }
+    if (isLateWave) {
+      for (var lt2 = 0; lt2 < 2; lt2++) enemies.push('transporter');
+    }
+  }
+  // --- Sector 3: all types + Flottenverband bosses ---
+  else if (sid === 3) {
+    var j3Count = 4 + n * 2;
+    for (var j3 = 0; j3 < j3Count; j3++) enemies.push('jaeger');
+    if (n >= 2) {
+      var b3Count = Math.min(5, Math.floor(n / 2));
+      for (var b3 = 0; b3 < b3Count; b3++) enemies.push('bomber');
+    }
+    if (n >= 3) {
+      var t3Count = Math.min(4, Math.floor(n / 2));
+      for (var t3 = 0; t3 < t3Count; t3++) enemies.push('transporter');
+    }
+    if (n >= 4) {
+      var f3Count = Math.min(3, Math.floor((n - 2) / 3));
+      for (var f3 = 0; f3 < f3Count; f3++) enemies.push('fregatte');
+    }
+    if (isLateWave) {
+      for (var lt3 = 0; lt3 < 3; lt3++) enemies.push('transporter');
+    }
+  }
+
+  // Boss wave: Flottenverband + escort swarm (sector 3 only)
+  if (isBoss && sid >= 3) {
+    enemies.push('flottenverband');
+    // Escort swarm for the boss
+    for (var es = 0; es < 4; es++) enemies.push('jaeger');
+    for (var es2 = 0; es2 < 2; es2++) enemies.push('bomber');
+  }
+
+  // Shuffle for variety (keep boss at end if present)
+  var boss = null;
+  if (isBoss && sid >= 3) boss = enemies.pop();
+  // Simple shuffle
+  for (var i = enemies.length - 1; i > 0; i--) {
+    var ri = Math.floor(Math.random() * (i + 1));
+    var temp = enemies[i]; enemies[i] = enemies[ri]; enemies[ri] = temp;
+  }
+  if (boss) enemies.push(boss);
+
   return enemies;
 }
 
@@ -750,6 +912,7 @@ function drawPath() {
 }
 
 function drawTowers() {
+  var now = performance.now();
   for (var i = 0; i < state.towers.length; i++) {
     var t = state.towers[i];
     var def = t.def;
@@ -760,8 +923,11 @@ function drawTowers() {
       ctx.strokeStyle = 'rgba(0,217,255,0.2)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(t.x, t.y, range, 0, Math.PI*2); ctx.stroke();
     }
-    ctx.shadowColor = def.color; ctx.shadowBlur = 10;
-    ctx.fillStyle = '#1b263b';
+    // Flash effect when hit by enemy fire
+    var flashing = (now < t.hitFlashUntil);
+    ctx.shadowColor = flashing ? '#ff4757' : def.color;
+    ctx.shadowBlur = flashing ? 18 : 10;
+    ctx.fillStyle = flashing ? '#3a1518' : '#1b263b';
     ctx.beginPath();
     for (var j = 0; j < 6; j++) {
       var a = (j/6)*Math.PI*2 + Math.PI/6;
@@ -770,7 +936,7 @@ function drawTowers() {
     }
     ctx.closePath(); ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = def.color;
+    ctx.fillStyle = flashing ? '#ff6b6b' : def.color;
     ctx.beginPath(); ctx.arc(t.x, t.y, 6, 0, Math.PI*2); ctx.fill();
     ctx.strokeStyle = def.color; ctx.lineWidth = 3;
     ctx.shadowColor = def.beamColor; ctx.shadowBlur = 6;
@@ -785,11 +951,20 @@ function drawTowers() {
         ctx.beginPath(); ctx.arc(t.x - 6 + k*6, t.y + 10, 1.5, 0, Math.PI*2); ctx.fill();
       }
     }
+    // Tower HP bar (only when damaged)
+    if (t.hp < t.maxHp) {
+      var hpPct = Math.max(0, t.hp / t.maxHp);
+      var barW = 18;
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(t.x - barW/2 - 1, t.y - 14, barW + 2, 4);
+      ctx.fillStyle = hpPct > 0.5 ? '#00ff88' : hpPct > 0.25 ? '#ffd700' : '#ff4757';
+      ctx.fillRect(t.x - barW/2, t.y - 13, barW * hpPct, 2);
+    }
   }
 }
 
 function drawEnemies() {
-  var icons = { scout:'🛸', fighter:'🚀', cruiser:'🛰️', mothership:'👾' };
+  var icons = { transporter:'🚢', fregatte:'🛰️', jaeger:'🚀', bomber:'⚔️', flottenverband:'👾' };
   for (var i = 0; i < state.enemies.length; i++) {
     var e = state.enemies[i];
     if (!e.alive) continue;
@@ -811,6 +986,17 @@ function drawEnemies() {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(icons[e.type] || '🛸', 0, 0);
     ctx.restore();
+    // Transport/escort visual indicators
+    if (e.isTransport) {
+      // Cargo icon overlay
+      ctx.font = '8px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('📦', e.x, e.y - e.size - 2);
+    } else if (e.canShoot) {
+      // Red ring for escort fighters
+      ctx.strokeStyle = 'rgba(255,71,87,0.5)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.size + 4, 0, Math.PI*2); ctx.stroke();
+    }
     var barW = e.size * 2.5;
     var hpPct = Math.max(0, e.hp / e.maxHp);
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -854,6 +1040,30 @@ function drawProjectiles() {
   }
 }
 
+function drawEnemyProjectiles() {
+  var now = performance.now();
+  for (var i = 0; i < state.enemyProjectiles.length; i++) {
+    var p = state.enemyProjectiles[i];
+    if (!p.alive) continue;
+    if (now < p.born) continue; // not yet fired (salvo delay)
+    // Orange/red ball with trail effect
+    ctx.shadowColor = '#ff4757'; ctx.shadowBlur = 10;
+    // Trail
+    ctx.fillStyle = 'rgba(255,165,0,0.3)';
+    ctx.beginPath(); ctx.arc(p.x - 3, p.y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,100,0,0.4)';
+    ctx.beginPath(); ctx.arc(p.x - 1.5, p.y, 3.5, 0, Math.PI*2); ctx.fill();
+    // Core
+    ctx.fillStyle = '#ff4757';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = '#ff6b6b';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+  }
+}
+
 function drawPlacement() {
   if (!state.selectedTower || state.hoverX < 0) return;
   var def = TOWER_TYPES[state.selectedTower];
@@ -880,6 +1090,16 @@ function render() {
   drawTowers();
   drawEnemies();
   drawProjectiles();
+  drawEnemyProjectiles();
+  // HUD flash when tower destroyed
+  if (state.hudFlashUntil && performance.now() < state.hudFlashUntil) {
+    var hud = document.getElementById('hud');
+    hud.style.transition = 'background 0.1s';
+    hud.style.background = 'rgba(255,71,87,0.3)';
+  } else if (state.hudFlashUntil) {
+    state.hudFlashUntil = 0;
+    document.getElementById('hud').style.background = 'var(--panel)';
+  }
 }
 
 // ============================================================
@@ -904,8 +1124,16 @@ function update(dt) {
   for (var j = 0; j < state.towers.length; j++) {
     towerFire(state.towers[j], now);
   }
+  // Enemy fire: escort ships shoot at nearby towers
+  for (var ef = 0; ef < state.enemies.length; ef++) {
+    enemyFire(state.enemies[ef], now);
+  }
   for (var k = 0; k < state.projectiles.length; k++) {
     if (state.projectiles[k].alive) updateProjectile(state.projectiles[k], scaledDt);
+  }
+  // Enemy projectiles hit towers
+  for (var ep = 0; ep < state.enemyProjectiles.length; ep++) {
+    if (state.enemyProjectiles[ep].alive) updateEnemyProjectile(state.enemyProjectiles[ep], scaledDt, now);
   }
 
   var surviving = [];
@@ -914,7 +1142,7 @@ function update(dt) {
     if (!e.alive && e.hp <= 0) {
       state.money += e.reward;
       state.score += e.reward;
-      if (e.type === 'mothership') SOUNDS.bossKill();
+      if (e.type === 'flottenverband') SOUNDS.bossKill();
       else SOUNDS.kill();
     } else if (e.alive) {
       surviving.push(e);
@@ -922,6 +1150,7 @@ function update(dt) {
   }
   state.enemies = surviving;
   state.projectiles = state.projectiles.filter(function(p){ return p.alive; });
+  state.enemyProjectiles = state.enemyProjectiles.filter(function(p){ return p.alive; });
 
   // Wave complete
   if (state.waveActive && state.enemiesToSpawn.length === 0 && state.enemies.length === 0) {
@@ -969,6 +1198,7 @@ function updateHUD() {
   document.getElementById('lives').textContent = state.lives;
   document.getElementById('wave').textContent = state.wave;
   document.getElementById('score').textContent = state.score;
+  document.getElementById('tower-count').textContent = state.towers.length;
   document.getElementById('sektor-label').textContent = currentSector ? ('S' + currentSector.id) : 'S1';
   document.querySelectorAll('.tower-btn').forEach(function(btn) {
     var type = btn.dataset.tower;
@@ -1144,7 +1374,12 @@ canvas.addEventListener('click', function(e) {
   var c = getGridCoords(e);
   if (c.gx < 0 || c.gx >= COLS || c.gy < 0 || c.gy >= ROWS) return;
   var existing = state.towers.find(function(t){ return t.gx===c.gx && t.gy===c.gy; });
-  if (existing) { upgradeTower(existing); return; }
+  if (existing) {
+    // If damaged, repair first; if at full HP, upgrade
+    if (existing.hp < existing.maxHp) repairTower(existing);
+    else upgradeTower(existing);
+    return;
+  }
   if (state.selectedTower) placeTower(c.gx, c.gy);
 });
 
@@ -1158,7 +1393,12 @@ canvas.addEventListener('touchstart', function(e) {
   state.hoverX = c.gx; state.hoverY = c.gy;
   if (c.gx < 0 || c.gx >= COLS || c.gy < 0 || c.gy >= ROWS) return;
   var existing = state.towers.find(function(tw){ return tw.gx===c.gx && tw.gy===c.gy; });
-  if (existing) { upgradeTower(existing); return; }
+  if (existing) {
+    // If damaged, repair first; if at full HP, upgrade
+    if (existing.hp < existing.maxHp) repairTower(existing);
+    else upgradeTower(existing);
+    return;
+  }
   if (state.selectedTower) placeTower(c.gx, c.gy);
 }, { passive: false });
 
