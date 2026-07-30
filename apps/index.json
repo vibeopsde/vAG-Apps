@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-29T19:37:43.210Z",
-  "count": 10,
+  "generatedAt": "2026-07-30T05:59:10.301Z",
+  "count": 11,
   "apps": [
     {
       "id": "vibeops.games.2048",
@@ -132,6 +132,23 @@
       "icon": "🐍",
       "entry": "index.html",
       "path": "Games/vibeops.snake",
+      "minVibeAgentGo": "2607.9.4",
+      "license": "MIT",
+      "permissions": [
+        "readFile",
+        "writeFile"
+      ]
+    },
+    {
+      "id": "vibeops.space-defense",
+      "name": "Space Defense",
+      "version": "1.1.0",
+      "author": "vibeops",
+      "category": "Games",
+      "description": "Verteidige dein Sector gegen Wellen von feindlichen Raumschiffen mit Laser, Ionen und EMP-Türmen.",
+      "icon": "🚀",
+      "entry": "index.html",
+      "path": "Games/vibeops.space-defense",
       "minVibeAgentGo": "2607.9.4",
       "license": "MIT",
       "permissions": [
