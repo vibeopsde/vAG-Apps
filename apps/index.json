@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-30T05:59:10.301Z",
+  "generatedAt": "2026-07-30T14:07:25.894Z",
   "count": 11,
   "apps": [
     {
@@ -142,10 +142,10 @@
     {
       "id": "vibeops.space-defense",
       "name": "Space Defense",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "author": "vibeops",
       "category": "Games",
-      "description": "Verteidige dein Sector gegen Wellen von feindlichen Raumschiffen mit Laser, Ionen und EMP-Türmen.",
+      "description": "Piratenpfad — Verteidige den Vela-Sektor als Piratenflotte gegen einfallende Konzerne und Militärs. Drei Sektoren, eine Ressource: Schrott.",
       "icon": "🚀",
       "entry": "index.html",
       "path": "Games/vibeops.space-defense",
