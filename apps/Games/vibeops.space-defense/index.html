@@ -35,10 +35,10 @@
 {
   "id": "vibeops.space-defense",
   "name": "Space Defense",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "author": "vibeops",
   "category": "Games",
-  "description": "Piratenpfad — Verteidige den Vela-Sektor. Transporter aufhalten, Begleitschiffe ausschalten, Türme schützen. Drei Sektoren, eine Ressource: Schrott.",
+  "description": "Piratenpfad — Jahr 2150. Kommandiere die Vela-Pakt und störe die UEK-Versorgungsroute. C&C-Kampagne mit Mission-Briefings, Debriefings und drei Missionen.",
   "icon": "🚀",
   "permissions": ["readFile", "writeFile"],
   "minVibeAgentGo": "2607.9.4",
@@ -113,23 +113,118 @@ html, body {
 }
 #menu-reset:active { transform: scale(0.95); }
 
-/* ===== STORY SCREEN ===== */
-#story-screen {
+/* ===== BRIEFING SCREEN (C&C style) ===== */
+#briefing-screen {
   display: none; flex-direction: column; align-items: center; justify-content: center;
-  width: 100%; min-height: 100%; padding: 20px 16px; gap: 16px;
+  width: 100%; min-height: 100%; padding: 16px 12px; gap: 10px;
 }
-#story-card {
-  max-width: 380px; padding: 20px 18px; border-radius: 14px;
+#briefing-card {
+  max-width: 400px; width: 100%; padding: 18px 16px; border-radius: 14px;
   background: var(--panel); border: 2px solid var(--sector-accent, var(--accent));
-  text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center;
+  display: flex; flex-direction: column; gap: 12px;
+  position: relative; overflow: hidden;
 }
-#story-sector-name { font-size: 18px; font-weight: 700; color: var(--sector-accent, var(--accent)); }
-#story-text { font-size: 13px; color: var(--text); line-height: 1.6; font-style: italic; }
-#story-btn {
-  padding: 10px 28px; font-size: 15px; background: var(--sector-accent, var(--accent));
-  color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;
+#briefing-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,217,255,0.03) 2px, rgba(0,217,255,0.03) 3px);
+  pointer-events: none;
 }
-#story-btn:active { transform: scale(0.95); }
+#briefing-header { display: flex; align-items: center; gap: 12px; }
+.commander-portrait {
+  width: 60px; height: 60px; border-radius: 10px; display: flex;
+  align-items: center; justify-content: center; font-size: 32px;
+  flex-shrink: 0; position: relative;
+}
+.commander-portrait.player {
+  background: linear-gradient(135deg, rgba(0,217,255,0.15), rgba(168,85,247,0.1));
+  border: 2px solid var(--accent); box-shadow: 0 0 12px rgba(0,217,255,0.4);
+}
+.commander-portrait.uek {
+  background: linear-gradient(135deg, rgba(255,71,87,0.15), rgba(230,126,34,0.1));
+  border: 2px solid var(--red); box-shadow: 0 0 12px rgba(255,71,87,0.4);
+}
+#briefing-title {
+  font-size: 16px; font-weight: 800; letter-spacing: 1px;
+  color: var(--sector-accent, var(--accent));
+  text-shadow: 0 0 10px rgba(0,217,255,0.3);
+}
+#briefing-text {
+  font-size: 13px; color: var(--text); line-height: 1.6; min-height: 80px;
+  white-space: pre-line; cursor: pointer; padding: 4px 0;
+}
+#briefing-skip {
+  align-self: flex-end; padding: 4px 12px; font-size: 12px;
+  background: transparent; color: var(--dim); border: 1px solid var(--accent2);
+  border-radius: 6px; cursor: pointer;
+}
+#briefing-skip:active { transform: scale(0.93); }
+.briefing-box {
+  padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--sector-accent, var(--accent));
+  background: rgba(255,255,255,0.03);
+}
+.briefing-box .briefing-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  color: var(--sector-accent, var(--accent)); text-transform: uppercase; margin-bottom: 4px;
+}
+.briefing-box .briefing-content { font-size: 12px; color: var(--text); line-height: 1.5; }
+#briefing-intel-box { opacity: 0.7; border-left-color: var(--red); }
+#briefing-deploy {
+  padding: 12px 28px; font-size: 16px; font-weight: 700;
+  background: var(--sector-accent, var(--accent)); color: #000;
+  border: none; border-radius: 8px; cursor: pointer; align-self: center;
+  box-shadow: 0 0 16px rgba(0,217,255,0.3);
+}
+#briefing-deploy:active { transform: scale(0.95); }
+#briefing-deploy:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+/* ===== DEBRIEFING SCREEN ===== */
+#debriefing-screen {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; min-height: 100%; padding: 16px 12px; gap: 10px;
+}
+#debriefing-card {
+  max-width: 400px; width: 100%; padding: 18px 16px; border-radius: 14px;
+  background: var(--panel); border: 2px solid var(--sector-accent, var(--accent));
+  display: flex; flex-direction: column; gap: 12px;
+  position: relative; overflow: hidden;
+}
+#debriefing-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,217,255,0.03) 2px, rgba(0,217,255,0.03) 3px);
+  pointer-events: none;
+}
+#debriefing-header { display: flex; align-items: center; gap: 12px; }
+#debriefing-title {
+  font-size: 18px; font-weight: 800; letter-spacing: 2px;
+  color: var(--sector-accent, var(--accent));
+  text-shadow: 0 0 12px rgba(0,217,255,0.4);
+}
+#debriefing-assessment {
+  font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-line;
+}
+#debriefing-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.stat-item {
+  display: flex; justify-content: space-between; padding: 8px 12px;
+  background: rgba(255,255,255,0.04); border-radius: 8px;
+  border: 1px solid var(--accent2);
+}
+.stat-label { font-size: 12px; color: var(--dim); }
+.stat-val { font-size: 16px; font-weight: 700; color: var(--gold); }
+#debriefing-hook {
+  font-size: 12px; color: var(--accent); font-style: italic; line-height: 1.5;
+  padding: 8px 12px; border-left: 2px solid var(--accent); background: rgba(0,217,255,0.05);
+  border-radius: 0 8px 8px 0;
+}
+#debriefing-hook:empty { display: none; }
+#debriefing-continue {
+  padding: 12px 28px; font-size: 16px; font-weight: 700;
+  background: var(--sector-accent, var(--accent)); color: #000;
+  border: none; border-radius: 8px; cursor: pointer; align-self: center;
+  box-shadow: 0 0 16px rgba(0,217,255,0.3);
+}
+#debriefing-continue:active { transform: scale(0.95); }
 
 /* ===== GAMEPLAY SCREEN ===== */
 #play-screen { display: none; flex-direction: column; align-items: center; width: 100%; }
@@ -191,19 +286,51 @@ canvas { display: block; width: 100%; height: auto; background: #050810; border:
 
   <!-- ===== MENU SCREEN ===== -->
   <div id="menu-screen">
-    <div id="menu-title">⚓ Piratenpfad</div>
-    <div id="menu-subtitle">Verteidige den Vela-Sektor</div>
+    <div id="menu-title">⚓ PIRATENPFAD</div>
+    <div id="menu-subtitle">Vela-Sektor — Jahr 2150</div>
     <div id="menu-intro">Der Vela-Sektor gehört uns. Seit Generationen. Jetzt kommen sie — Konzerne, Militärs, Bereicherer. Sie wollen unseren Schrott, unsere Routen, unser Zuhause. Zeig ihnen, warum niemand den Piratenpfad betritt.</div>
+    <div id="menu-total-score" style="font-size:13px;color:var(--gold);font-weight:700;text-align:center;">Gesamt-Score: 0</div>
     <div id="sector-cards"></div>
-    <button id="menu-reset">🗑 Neues Spiel</button>
+    <button id="menu-reset">🗑 Neue Kampagne</button>
   </div>
 
-  <!-- ===== STORY SCREEN ===== -->
-  <div id="story-screen">
-    <div id="story-card">
-      <div id="story-sector-name"></div>
-      <div id="story-text"></div>
-      <button id="story-btn">Weiter →</button>
+  <!-- ===== BRIEFING SCREEN ===== -->
+  <div id="briefing-screen">
+    <div id="briefing-card">
+      <div id="briefing-header">
+        <div id="briefing-portrait" class="commander-portrait player">🧑‍✈️</div>
+        <div id="briefing-title">MISSION 1: OUTER RIM</div>
+      </div>
+      <div id="briefing-text"></div>
+      <button id="briefing-skip">⏭️ Überspringen</button>
+      <div class="briefing-box">
+        <div class="briefing-label">Missionsziel</div>
+        <div class="briefing-content" id="briefing-objective"></div>
+      </div>
+      <div class="briefing-box" id="briefing-intel-box">
+        <div class="briefing-label">Feindaufklärung</div>
+        <div class="briefing-content" id="briefing-intel"></div>
+      </div>
+      <button id="briefing-deploy" disabled>🚀 Mission starten</button>
+    </div>
+  </div>
+
+  <!-- ===== DEBRIEFING SCREEN ===== -->
+  <div id="debriefing-screen">
+    <div id="debriefing-card">
+      <div id="debriefing-header">
+        <div id="debriefing-portrait" class="commander-portrait player">🧑‍✈️</div>
+        <div id="debriefing-title">DEBRIEFING</div>
+      </div>
+      <div id="debriefing-assessment"></div>
+      <div id="debriefing-stats">
+        <div class="stat-item"><span class="stat-label">Score</span><span class="stat-val" id="db-score">0</span></div>
+        <div class="stat-item"><span class="stat-label">Wellen</span><span class="stat-val" id="db-waves">0</span></div>
+        <div class="stat-item"><span class="stat-label">Türme</span><span class="stat-val" id="db-towers">0</span></div>
+        <div class="stat-item"><span class="stat-label">Abschüsse</span><span class="stat-val" id="db-kills">0</span></div>
+      </div>
+      <div id="debriefing-hook"></div>
+      <button id="debriefing-continue">→ Weiter</button>
     </div>
   </div>
 
@@ -271,7 +398,11 @@ const SECTORS = [
     colorAccent: '#00d9ff',
     pathColor: 'rgba(0,217,255,0.12)',
     pathCenter: 'rgba(0,217,255,0.3)',
-    story: 'Piratenverband auf der Handelsroute. Halt sie auf — solange du noch reagieren kannst.',
+    briefingText: 'Sektor Vela, Äußerer Rand. Jahr 2150.\n\nDie UEK hat unsere Handelsroute infiltriert. Erste Aufklärer berichten Konvois aus dem inneren Sektor — sie wollen unseren Erzvorrat abtransportieren.\n\nKommandant, das ist unsere erste Gelegenheit, ihnen zu zeigen, dass der Vela-Pakt nicht wegschaut. Halte die Route, nimm ihren Schrott.',
+    briefingObjective: 'Halte alle 8 Wellen auf. Verliere nicht alle Leben.',
+    briefingIntel: 'Leichte Jäger-Verbände. Keine Bomber, keine Flottenverbände erwartet.',
+    debriefingAssessment: 'Gut gemacht, Kommandant. Erste Konvois abgewehrt — aber das war nur die Spitze. Aufklärung meldet Bewegung im Nebel. Sie kommen zurück. Mit mehr.',
+    debriefingHook: 'Die UEK bereitet etwas vor. Unser Nebelversteck ist als Nächstes dran.',
     path: [
       {x:0,y:2},{x:5,y:2},{x:5,y:7},{x:12,y:7},{x:12,y:2},{x:17,y:2},
       {x:17,y:12},{x:7,y:12},{x:7,y:17},{x:17,y:17},{x:17,y:19},{x:20,y:19}
@@ -289,7 +420,11 @@ const SECTORS = [
     colorAccent: '#00ff88',
     pathColor: 'rgba(0,255,136,0.12)',
     pathCenter: 'rgba(0,255,136,0.3)',
-    story: 'Sie haben den Nebel als Deckung genutzt. Die Ionen-Türme sind aktiviert — aber der Nebel verbirgt mehr als erwartet.',
+    briefingText: 'Sie haben unseren Nebel gefunden.\n\nBomber-Verbände decken ihre Transporter jetzt. Sie transportieren nicht nur Erz — sie schleppen unsere eigenen Ressourcen ab, direkt aus den Nebelfeldern.\n\nDie Ionen-Türme sind aktiviert. Aber im Nebel sehen wir sie erst spät. Sei schneller als sie.',
+    briefingObjective: 'Halte alle 10 Wellen auf. Achtung: Bomber greifen Türme an.',
+    briefingIntel: 'Jäger, Bomber und Fregatten. Transporter mit Eskorte erwartet.',
+    debriefingAssessment: 'Der Nebel ist gesichert — aber sie haben unsere Position an den Kern weitergemeldet. Die Raffinerie ist das nächste Ziel. Wenn die fällt, verlieren wir alles.',
+    debriefingHook: 'Endkampf an der Core Forge. Sie schicken alles was sie haben.',
     path: [
       {x:0,y:1},{x:3,y:1},{x:3,y:5},{x:1,y:5},{x:1,y:9},{x:5,y:9},
       {x:5,y:5},{x:9,y:5},{x:9,y:10},{x:13,y:10},{x:13,y:4},
@@ -309,7 +444,11 @@ const SECTORS = [
     colorAccent: '#ff4757',
     pathColor: 'rgba(255,71,87,0.12)',
     pathCenter: 'rgba(255,71,87,0.3)',
-    story: 'Endkampf an der Schrott-Raffinerie. Verliere den Kern — verliere alles.',
+    briefingText: 'Endkampf.\n\nDie UEK schickt Flottenverbände — alles, was sie noch haben. Bomber, Fregatten, komplette Konvois. Die Raffinerie ist unser letzter Stützpunkt.\n\nHältst du den Kern, haben sie nichts mehr zu holen. Fällt der Kern, fällt der Vela-Sektor.\n\nKein Druck, Kommandant.',
+    briefingObjective: 'Halte alle 12 Wellen auf. Flottenverbände erwartet — devastierende Salven.',
+    briefingIntel: 'Alle Feindtypen. Boss-Wellen alle 5 Wellen mit Flottenverbänden.',
+    debriefingAssessment: 'Der Vela-Sektor ist gesichert. Die UEK zieht sich zurück — zum ersten Mal seit sie kamen.\n\nDu hast den Sektor gehalten, Kommandant. Der Piratenpfad bleibt unser.',
+    debriefingHook: '',
     path: [
       {x:0,y:1},{x:2,y:1},{x:2,y:4},{x:5,y:4},{x:5,y:1},{x:8,y:1},
       {x:8,y:5},{x:11,y:5},{x:11,y:1},{x:14,y:1},{x:14,y:5},
@@ -385,7 +524,7 @@ function extractContent(raw) {
 // ============================================================
 // PROGRESS PERSISTENCE
 // ============================================================
-let progress = { unlockedSectors: 1, highscores: { 1: 0, 2: 0, 3: 0 }, totalScore: 0 };
+let progress = { unlockedSectors: 1, highscores: { 1: 0, 2: 0, 3: 0 }, totalScore: 0, completedMissions: [] };
 
 async function loadProgress() {
   try {
@@ -398,6 +537,7 @@ async function loadProgress() {
           progress.unlockedSectors = Number(data.unlockedSectors) || 1;
           progress.highscores = data.highscores || { 1: 0, 2: 0, 3: 0 };
           progress.totalScore = Number(data.totalScore) || 0;
+          progress.completedMissions = Array.isArray(data.completedMissions) ? data.completedMissions : [];
           // ensure all keys exist
           for (var i = 1; i <= 3; i++) {
             if (progress.highscores[i] === undefined) progress.highscores[i] = 0;
@@ -417,7 +557,7 @@ async function saveProgress() {
 }
 
 function resetProgress() {
-  progress = { unlockedSectors: 1, highscores: { 1: 0, 2: 0, 3: 0 }, totalScore: 0 };
+  progress = { unlockedSectors: 1, highscores: { 1: 0, 2: 0, 3: 0 }, totalScore: 0, completedMissions: [] };
   saveProgress();
   renderMenu();
 }
@@ -486,7 +626,7 @@ var SOUNDS = {
 // ============================================================
 // GAME STATE
 // ============================================================
-var screen = 'MENU'; // MENU, STORY, PLAYING, SECTOR_CLEAR, SECTOR_LOST, VICTORY
+var screen = 'MENU'; // MENU, BRIEFING, PLAYING, DEBRIEFING, MISSION_FAILED, VICTORY
 var currentSectorIdx = 0;
 var currentSector = null;
 var pathCells = new Set();
@@ -538,7 +678,8 @@ function resetGame() {
     selectedTower: null, hoverX: -1, hoverY: -1,
     waveActive: false, gameOver: false, speed: 1,
     enemiesToSpawn: [], spawnTimer: 0,
-    hudFlashUntil: 0
+    hudFlashUntil: 0,
+    towersBuilt: 0, enemiesKilled: 0
   };
   document.querySelectorAll('.tower-btn').forEach(function(b) { b.classList.remove('selected'); });
   var btn = document.getElementById('start-btn');
@@ -614,6 +755,7 @@ function placeTower(gx, gy) {
     type: type, def: def, level: 1, lastFired: 0, angle: 0,
     hp: maxHp, maxHp: maxHp, hitFlashUntil: 0
   });
+  state.towersBuilt++;
   updateHUD();
 }
 
@@ -1142,6 +1284,7 @@ function update(dt) {
     if (!e.alive && e.hp <= 0) {
       state.money += e.reward;
       state.score += e.reward;
+      state.enemiesKilled++;
       if (e.type === 'flottenverband') SOUNDS.bossKill();
       else SOUNDS.kill();
     } else if (e.alive) {
@@ -1220,29 +1363,85 @@ function applySectorTheme() {
 function showScreen(name) {
   screen = name;
   document.getElementById('menu-screen').style.display = (name === 'MENU') ? 'flex' : 'none';
-  document.getElementById('story-screen').style.display = (name === 'STORY') ? 'flex' : 'none';
-  document.getElementById('play-screen').style.display = (name === 'PLAYING' || name === 'SECTOR_CLEAR' || name === 'SECTOR_LOST' || name === 'VICTORY') ? 'flex' : 'none';
+  document.getElementById('briefing-screen').style.display = (name === 'BRIEFING') ? 'flex' : 'none';
+  document.getElementById('debriefing-screen').style.display = (name === 'DEBRIEFING') ? 'flex' : 'none';
+  document.getElementById('play-screen').style.display = (name === 'PLAYING' || name === 'MISSION_FAILED' || name === 'VICTORY') ? 'flex' : 'none';
 }
 
+// ============================================================
+// TYPEWRITER EFFECT
+// ============================================================
+function typeText(element, text, speed, callback) {
+  // Cancel any existing typewriter on this element
+  if (element._typeInterval) { clearInterval(element._typeInterval); element._typeInterval = null; }
+  element.textContent = '';
+  var i = 0;
+  var fullText = text;
+  element._typeCallback = callback;
+  element._typeText = fullText;
+  element._typeInterval = setInterval(function() {
+    if (i >= fullText.length) {
+      clearInterval(element._typeInterval);
+      element._typeInterval = null;
+      if (callback) callback();
+      return;
+    }
+    element.textContent += fullText.charAt(i);
+    i++;
+  }, speed);
+}
+
+function skipTypewriter(element) {
+  if (element._typeInterval) {
+    clearInterval(element._typeInterval);
+    element._typeInterval = null;
+  }
+  if (element._typeText) {
+    element.textContent = element._typeText;
+    element._typeText = null;
+  }
+  if (element._typeCallback) {
+    var cb = element._typeCallback;
+    element._typeCallback = null;
+    cb();
+  }
+}
+
+// ============================================================
+// MENU (mission cards)
+// ============================================================
 function renderMenu() {
   var container = document.getElementById('sector-cards');
   container.innerHTML = '';
+  document.getElementById('menu-total-score').textContent = 'Gesamt-Score: ' + (progress.totalScore || 0);
   for (var i = 0; i < SECTORS.length; i++) {
     var s = SECTORS[i];
     var locked = s.id > progress.unlockedSectors;
+    var completed = progress.completedMissions.indexOf(s.id) !== -1;
     var best = progress.highscores[s.id] || 0;
     var card = document.createElement('div');
     card.className = 'sector-card' + (locked ? ' locked' : '');
     card.style.setProperty('--card-accent', s.colorAccent);
+    var statusText, statusIcon;
+    if (locked) {
+      statusText = '🔒 Gesperrt';
+      statusIcon = '🔒';
+    } else if (completed) {
+      statusText = '✅ Abgeschlossen (Score: ' + best + ')';
+      statusIcon = '✅';
+    } else {
+      statusText = '🔓 Verfügbar';
+      statusIcon = '🔓';
+    }
     card.innerHTML =
       '<div class="sc-header">' +
-        '<span class="sc-name">Sektor ' + s.id + ': ' + s.name + '</span>' +
-        '<span class="sc-lock">' + (locked ? '🔒' : '✅') + '</span>' +
+        '<span class="sc-name">Mission ' + s.id + ': ' + s.name + '</span>' +
+        '<span class="sc-lock">' + statusIcon + '</span>' +
       '</div>' +
       '<div class="sc-desc">' + s.desc + '</div>' +
       '<div class="sc-stats">' +
         '<span class="sc-waves">🌊 ' + s.waves + ' Wellen</span>' +
-        '<span class="sc-best">🏆 Best: ' + best + '</span>' +
+        '<span class="sc-best">' + statusText + '</span>' +
       '</div>';
     if (!locked) {
       (function(sectorIdx) {
@@ -1257,19 +1456,49 @@ function renderMenu() {
   }
 }
 
+// ============================================================
+// BRIEFING
+// ============================================================
 function startSector(idx) {
   currentSectorIdx = idx;
   currentSector = SECTORS[idx];
   setupSectorPath(currentSector);
   applySectorTheme();
-  // Show story card
-  document.getElementById('story-sector-name').textContent = 'Sektor ' + currentSector.id + ': ' + currentSector.name;
-  document.getElementById('story-sector-name').style.color = currentSector.colorAccent;
-  document.getElementById('story-text').textContent = currentSector.story;
-  document.getElementById('story-btn').style.background = currentSector.colorAccent;
-  document.getElementById('story-card').style.borderColor = currentSector.colorAccent;
-  showScreen('STORY');
+  showBriefing();
 }
+
+function showBriefing() {
+  var s = currentSector;
+  // Set theme colors
+  document.getElementById('briefing-card').style.borderColor = s.colorAccent;
+  document.getElementById('briefing-title').textContent = 'MISSION ' + s.id + ': ' + s.name.toUpperCase();
+  document.getElementById('briefing-title').style.color = s.colorAccent;
+  document.getElementById('briefing-objective').textContent = s.briefingObjective;
+  document.getElementById('briefing-intel').textContent = s.briefingIntel;
+  var deployBtn = document.getElementById('briefing-deploy');
+  deployBtn.disabled = true;
+  deployBtn.style.background = s.colorAccent;
+  // Typewriter briefing text
+  var textEl = document.getElementById('briefing-text');
+  typeText(textEl, s.briefingText, 30, function() {
+    deployBtn.disabled = false;
+  });
+  showScreen('BRIEFING');
+}
+
+// Skip handlers for typewriter
+document.getElementById('briefing-text').addEventListener('click', function() {
+  skipTypewriter(document.getElementById('briefing-text'));
+});
+document.getElementById('briefing-skip').addEventListener('click', function() {
+  skipTypewriter(document.getElementById('briefing-text'));
+});
+
+document.getElementById('briefing-deploy').addEventListener('click', function() {
+  initAudio(); resumeAudio();
+  SOUNDS.menuClick();
+  beginPlay();
+});
 
 function beginPlay() {
   resetGame();
@@ -1278,12 +1507,19 @@ function beginPlay() {
   lastFrame = 0;
 }
 
+// ============================================================
+// DEBRIEFING (replaces sector clear)
+// ============================================================
 function onSectorClear() {
-  screen = 'SECTOR_CLEAR';
+  screen = 'DEBRIEFING';
   SOUNDS.sectorClear();
   // Update highscore
   if (state.score > (progress.highscores[currentSector.id] || 0)) {
     progress.highscores[currentSector.id] = state.score;
+  }
+  // Track completed missions
+  if (progress.completedMissions.indexOf(currentSector.id) === -1) {
+    progress.completedMissions.push(currentSector.id);
   }
   progress.totalScore += state.score;
   // Unlock next sector
@@ -1293,34 +1529,78 @@ function onSectorClear() {
   saveProgress();
 
   var isFinal = (currentSector.id === 3);
-  var title = isFinal ? 'Vela-Sektor gesichert!' : 'Sektor ' + currentSector.id + ' gesichert!';
-  var text = 'Score: ' + state.score + ' | Gesamt: ' + progress.totalScore;
-  var btnText = isFinal ? '🎉 Zum Sieg' : '→ Zum Menü';
 
-  showOverlay(title, text, btnText, isFinal ? 'victory' : 'win', function() {
+  // Populate debriefing
+  document.getElementById('debriefing-card').style.borderColor = currentSector.colorAccent;
+  document.getElementById('debriefing-title').style.color = currentSector.colorAccent;
+  document.getElementById('debriefing-assessment').textContent = currentSector.debriefingAssessment;
+  document.getElementById('db-score').textContent = state.score;
+  document.getElementById('db-waves').textContent = state.wave;
+  document.getElementById('db-towers').textContent = state.towersBuilt;
+  document.getElementById('db-kills').textContent = state.enemiesKilled;
+  var hookEl = document.getElementById('debriefing-hook');
+  hookEl.textContent = currentSector.debriefingHook || '';
+  var contBtn = document.getElementById('debriefing-continue');
+  contBtn.style.background = currentSector.colorAccent;
+  if (isFinal) {
+    contBtn.textContent = '🏆 Kampagne abgeschlossen';
+  } else {
+    contBtn.textContent = '→ Weiter';
+  }
+  contBtn.onclick = function() {
+    initAudio(); resumeAudio();
+    SOUNDS.menuClick();
     if (isFinal) {
       showVictory();
     } else {
-      SOUNDS.menuClick();
-      showScreen('MENU');
-      renderMenu();
+      // Go to next mission's briefing directly
+      currentSectorIdx++;
+      currentSector = SECTORS[currentSectorIdx];
+      setupSectorPath(currentSector);
+      applySectorTheme();
+      showBriefing();
     }
-  });
+  };
+  showScreen('DEBRIEFING');
 }
 
+// ============================================================
+// MISSION FAILED (replaces sector lost)
+// ============================================================
 function onSectorLost() {
-  screen = 'SECTOR_LOST';
-  showOverlay('Sektor ' + currentSector.id + ' verloren!', 'Welle ' + state.wave + ' erreicht — Score: ' + state.score, '↻ Nochmal', 'lose', function() {
+  screen = 'MISSION_FAILED';
+  var title = 'Mission gescheitert';
+  var text = 'Welle ' + state.wave + ' erreicht — Score: ' + state.score;
+  showOverlay(title, text, '↻ Nochmal', 'lose', function() {
     SOUNDS.menuClick();
+    // Retry — go back to briefing for this mission
+    showBriefing();
+  });
+  // Add a second action: back to menu
+  var overlay = document.getElementById('overlay');
+  var menuBtn = document.createElement('button');
+  menuBtn.id = 'ov-menu-btn';
+  menuBtn.textContent = '☰ Zum Menü';
+  menuBtn.style.background = 'transparent';
+  menuBtn.style.color = 'var(--dim)';
+  menuBtn.style.border = '1px solid var(--accent2)';
+  menuBtn.style.marginTop = '4px';
+  menuBtn.onclick = function() {
+    SOUNDS.menuClick();
+    overlay.style.display = 'none';
     showScreen('MENU');
     renderMenu();
-  });
+  };
+  overlay.appendChild(menuBtn);
 }
 
+// ============================================================
+// VICTORY (campaign complete)
+// ============================================================
 function showVictory() {
   screen = 'VICTORY';
   SOUNDS.victory();
-  showOverlay('⚓ Vela-Sektor gesichert!', 'Gesamt-Score: ' + progress.totalScore + '\nAlle Sektoren befreit!', '→ Zum Menü', 'victory', function() {
+  showOverlay('⚓ Kampagne abgeschlossen!', 'Gesamt-Score: ' + progress.totalScore + '\nDer Vela-Sektor ist befreit!', '→ Zum Menü', 'victory', function() {
     SOUNDS.menuClick();
     showScreen('MENU');
     renderMenu();
@@ -1329,6 +1609,9 @@ function showVictory() {
 
 function showOverlay(title, text, btnText, cls, callback) {
   var overlay = document.getElementById('overlay');
+  // Remove any previously added menu button
+  var oldMenuBtn = document.getElementById('ov-menu-btn');
+  if (oldMenuBtn) oldMenuBtn.remove();
   var titleEl = document.getElementById('ov-title');
   var textEl = document.getElementById('ov-text');
   var btn = document.getElementById('ov-btn');
@@ -1431,12 +1714,6 @@ document.getElementById('menu-back-btn').addEventListener('click', function() {
   SOUNDS.menuClick();
   showScreen('MENU');
   renderMenu();
-});
-
-document.getElementById('story-btn').addEventListener('click', function() {
-  initAudio(); resumeAudio();
-  SOUNDS.menuClick();
-  beginPlay();
 });
 
 document.getElementById('menu-reset').addEventListener('click', function() {

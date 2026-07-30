@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-30T16:32:10.004Z",
+  "generatedAt": "2026-07-30T17:20:24.403Z",
   "count": 11,
   "apps": [
     {
@@ -142,10 +142,10 @@
     {
       "id": "vibeops.space-defense",
       "name": "Space Defense",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "author": "vibeops",
       "category": "Games",
-      "description": "Piratenpfad — Verteidige den Vela-Sektor. Transporter aufhalten, Begleitschiffe ausschalten, Türme schützen. Drei Sektoren, eine Ressource: Schrott.",
+      "description": "Piratenpfad — Jahr 2150. Kommandiere die Vela-Pakt und störe die UEK-Versorgungsroute. C&C-Kampagne mit Mission-Briefings, Debriefings und drei Missionen.",
       "icon": "🚀",
       "entry": "index.html",
       "path": "Games/vibeops.space-defense",
