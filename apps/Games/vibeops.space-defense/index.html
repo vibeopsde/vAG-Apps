@@ -35,7 +35,7 @@
 {
   "id": "vibeops.space-defense",
   "name": "Space Defense",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "author": "vibeops",
   "category": "Games",
   "description": "Piratenpfad — Jahr 2150. Kommandiere die Vela-Pakt und störe die UEK-Versorgungsroute. C&C-Kampagne mit Mission-Briefings, Debriefings und drei Missionen.",
@@ -352,7 +352,7 @@ canvas { display: block; width: 100%; height: auto; background: #050810; border:
         <button id="ov-btn">↻ Nochmal</button>
       </div>
     </div>
-    <div id="info-bar">Turm wählen → auf Spielfeld platzieren. Auf Turm klicken: beschädigt = Reparatur (30🔩/40HP), voll = Upgrade.</div>
+    <div id="info-bar">Turm wählen → platzieren (Mindestabstand 2 Felder zu anderen Türmen). Auf Turm klicken: beschädigt = Reparatur (30🔩/40HP), voll = Upgrade.</div>
     <div id="controls">
       <div class="tower-btn" data-tower="laser">
         <span class="icon">🔴</span><span>Pulskanone</span><span class="cost">60🔩</span>
@@ -739,11 +739,23 @@ function moveEnemy(e, dt) {
 // ============================================================
 // TOWERS
 // ============================================================
+// Minimum distance between towers (in grid cells)
+var TOWER_MIN_DIST = 2; // no tower within 2 cells of an existing tower
+
+function isTooCloseToTower(gx, gy) {
+  for (var i = 0; i < state.towers.length; i++) {
+    var t = state.towers[i];
+    if (Math.abs(t.gx - gx) <= TOWER_MIN_DIST && Math.abs(t.gy - gy) <= TOWER_MIN_DIST) return true;
+  }
+  return false;
+}
+
 function placeTower(gx, gy) {
   var type = state.selectedTower;
   if (!type) return;
   if (pathCells.has(gx + ',' + gy)) return;
   if (state.towers.some(function(t){ return t.gx===gx && t.gy===gy; })) return;
+  if (isTooCloseToTower(gx, gy)) return;
   if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) return;
   var def = TOWER_TYPES[type];
   if (state.money < def.cost) return;
@@ -1211,7 +1223,8 @@ function drawPlacement() {
   var def = TOWER_TYPES[state.selectedTower];
   var onPath = pathCells.has(state.hoverX + ',' + state.hoverY);
   var occupied = state.towers.some(function(t){ return t.gx === state.hoverX && t.gy === state.hoverY; });
-  var canPlace = !onPath && !occupied && state.money >= def.cost;
+  var tooClose = isTooCloseToTower(state.hoverX, state.hoverY);
+  var canPlace = !onPath && !occupied && !tooClose && state.money >= def.cost;
   ctx.fillStyle = canPlace ? 'rgba(0,255,136,0.2)' : 'rgba(255,71,87,0.2)';
   ctx.fillRect(state.hoverX * GRID, state.hoverY * GRID, GRID, GRID);
   if (canPlace) {
