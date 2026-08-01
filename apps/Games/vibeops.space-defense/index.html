@@ -35,7 +35,7 @@
 {
   "id": "vibeops.space-defense",
   "name": "Space Defense",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "author": "vibeops",
   "category": "Games",
   "description": "Piratenpfad — Jahr 2150. Kommandiere die Vela-Pakt und störe die UEK-Versorgungsroute. C&C-Kampagne mit Mission-Briefings, Debriefings und drei Missionen.",
@@ -352,7 +352,7 @@ canvas { display: block; width: 100%; height: auto; background: #050810; border:
         <button id="ov-btn">↻ Nochmal</button>
       </div>
     </div>
-    <div id="info-bar">Turm wählen → platzieren (Mindestabstand 2 Felder zu anderen Türmen). Auf Turm klicken: beschädigt = Reparatur (30🔩/40HP), voll = Upgrade.</div>
+    <div id="info-bar">Turm wählen → platzieren (Mindestabstand 2 Felder zu anderen Türmen). Auf Turm klicken: beschädigt = Reparatur (15🔩/50HP), voll = Upgrade.</div>
     <div id="controls">
       <div class="tower-btn" data-tower="laser">
         <span class="icon">🔴</span><span>Pulskanone</span><span class="cost">60🔩</span>
@@ -785,10 +785,10 @@ function upgradeTower(tower) {
 
 function repairTower(tower) {
   if (tower.hp >= tower.maxHp) return false;
-  var repairCost = 30;
+  var repairCost = 15;
   if (state.money < repairCost) return false;
   state.money -= repairCost;
-  tower.hp = Math.min(tower.maxHp, tower.hp + 40);
+  tower.hp = Math.min(tower.maxHp, tower.hp + 50);
   SOUNDS.place();
   updateHUD();
   return true;
@@ -1612,6 +1612,7 @@ function onSectorLost() {
 // ============================================================
 function showVictory() {
   screen = 'VICTORY';
+  showScreen('VICTORY');
   SOUNDS.victory();
   showOverlay('⚓ Kampagne abgeschlossen!', 'Gesamt-Score: ' + progress.totalScore + '\nDer Vela-Sektor ist befreit!', '→ Zum Menü', 'victory', function() {
     SOUNDS.menuClick();

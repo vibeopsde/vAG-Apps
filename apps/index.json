@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-30T19:10:52.720Z",
+  "generatedAt": "2026-08-01T20:22:45.452Z",
   "count": 11,
   "apps": [
     {
@@ -142,7 +142,7 @@
     {
       "id": "vibeops.space-defense",
       "name": "Space Defense",
-      "version": "2.2.1",
+      "version": "2.2.2",
       "author": "vibeops",
       "category": "Games",
       "description": "Piratenpfad — Jahr 2150. Kommandiere die Vela-Pakt und störe die UEK-Versorgungsroute. C&C-Kampagne mit Mission-Briefings, Debriefings und drei Missionen.",
